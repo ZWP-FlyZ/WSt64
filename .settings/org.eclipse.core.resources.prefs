@@ -1,0 +1,15 @@
+eclipse.preferences.version=1
+encoding//src/autoencoder/BPencoder2.py=utf-8
+encoding//src/autoencoder/BPencoder_CF.py=utf-8
+encoding//src/autoencoder/BPencoder_QoS.py=utf-8
+encoding//src/autoencoder/BPencoder_movielen.py=utf-8
+encoding//src/cf/CF.py=utf-8
+encoding//src/cf/CF2.py=utf-8
+encoding//src/mf/mf_baseline.py=utf-8
+encoding//src/spilter/spilter1.py=utf-8
+encoding//src/spilter/spilter2.py=utf-8
+encoding//src/test/DataSetCal.py=utf-8
+encoding//src/test/DataSetCal2.py=utf-8
+encoding//src/test/EncoderTest.py=utf-8
+encoding//src/test/pytest.py=utf-8
+encoding//src/test/pytest2.py=utf-8
