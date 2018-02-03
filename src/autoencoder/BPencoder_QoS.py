@@ -4,6 +4,7 @@ Created on 2018年1月23日
 
 @author: zwp12
 '''
+from tools import SysCheck
 
 '''
 
@@ -226,7 +227,9 @@ def predict(u,s,R,W,S):
         return 0.2;
 
 
-base_path = r'E:/Dataset/wst';
+base_path = r'E:';
+if SysCheck.check()=='l':
+    base_path='/home/zwp/work'
 origin_data = base_path+'/rtdata.txt';
 
 
@@ -273,11 +276,11 @@ W = np.full((axis0,axis0), 0, float);
     
 
 def encoder_run(spa):
-    train_data = r'E:/Dataset/ws/train/sparseness%d/training%d.txt'%(spa,case);
-    test_data = r'E:/Dataset/ws/test/sparseness%d/test%d.txt'%(spa,case);
-    W_path = r'E:/Dataset/ws/BP_CF_W_spa%d_t%d.txt'%(spa,case);
+    train_data = base_path+'/Dataset/ws/train/sparseness%d/training%d.txt'%(spa,case);
+    test_data = base_path+'/Dataset/ws/test/sparseness%d/test%d.txt'%(spa,case);
+    W_path = base_path+'/Dataset/ws/BP_CF_W_spa%d_t%d.txt'%(spa,case);
        
-    values_path=r'E:/Dataset/ae_values/spa%d'%(spa);
+    values_path=base_path+'/Dataset/ae_values/spa%d'%(spa);
     
     print('开始实验，稀疏度=%d,case=%d'%(spa,case));
     print ('加载训练数据开始');
@@ -364,5 +367,5 @@ def encoder_run(spa):
     print(S)
         
 if __name__ == '__main__':
-    encoder_run(10);
+    encoder_run(20);
     pass
