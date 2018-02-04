@@ -11,6 +11,8 @@ import math;
 from math import sqrt
 import os;
 from tools import SysCheck
+from tools import LoadLocation;
+from tools.LoadLocation import loadLocation
 
 '''
 协同过滤算法，在TensorFlow下的实现，
@@ -48,23 +50,22 @@ W = np.full((axis0,axis0), 0, float);
 S = None;
 R = None;
 
+loc_tab=None;
 
 sumS=np.zeros(axis0,float);# 平均向量
 
 spas = [5,10,15,20] #稀疏度
 
-case = 1;# 训练与测试例
-k=100; #
+case = 7;# 训练与测试例
+k=250; #
 p = 2 #
 
-
-
-
+loc_w = 5;
 
 
 # 根据W和S预测出u,s的值,
 def predict(u,s):
-    global R,W,S,sumS;
+    global R,W,S,sumS,loc_tab;
     a0 = u;
     a1 = s;
     if isICF:
@@ -76,19 +77,24 @@ def predict(u,s):
             break;
         if R[item,a1] ==NoneValue:
             continue;
-        sum+= W[a0,item]*R[item,a1];
-        cot+=W[a0,item];
+        rw = (W[a0,item]);            
+        if loc_tab[a0]==loc_tab[item]:
+            rw *=loc_w;
+        
+        sum+= rw*R[item,a1];
+        cot+=rw;
     if cot != 0:
         return sum/cot;
     else:
         return 0.2;
     
 def run_cf(spa):
-    global R,W,S,sumS;
+    global R,W,S,sumS,loc_tab;
     
     train_data = base_path+'/Dataset/ws/train/sparseness%d/training%d.txt'%(spa,case);
     test_data = base_path+'/Dataset/ws/test/sparseness%d/test%d.txt'%(spa,case);
     W_path = base_path+'/Dataset/ws/BP_CF_W_spa%d_t%d.txt'%(spa,case);
+    loc_path = base_path+'/Dataset/ws';
     
     print('开始实验，isICF=%s,稀疏度=%d,case=%d'%(isICF,spa,case));
     print ('加载训练数据开始');
@@ -96,6 +102,17 @@ def run_cf(spa):
     trdata = np.loadtxt(train_data, dtype=float);
     n = np.alen(trdata);
     print ('加载训练数据完成，耗时 %.2f秒，数据总条数%d  \n'%((time.time() - now),n));
+
+    print ('加载地理位置信息开始');
+    tnow = time.time();
+    if isICF:
+        loc_path+='/ws_info.txt';
+    else:
+        loc_path+='/user_info.txt';        
+    loc_tab = loadLocation(loc_path);
+    n = np.alen(trdata);
+    print ('加载地理位置信息完成，耗时 %.2f秒，数据总条数%d  \n'%((time.time() - tnow),n));
+
     
     print ('转换数据到矩阵开始');
     tnow = time.time();
@@ -115,7 +132,7 @@ def run_cf(spa):
     tnow = time.time();
     i=0;
     if readWcache and os.path.exists(W_path):
-        W = np.loadtxt(W_path, np.float64);
+        W = np.loadtxt(W_path, np.float128);
     else:
         for i in range(axis0-1):
             if i%50 ==0:
@@ -130,10 +147,10 @@ def run_cf(spa):
                 if cot!= 0:
                     # origin W[i,j]=W[j,i]=1.0/(ws ** (1.0/p)+1.0);
                     # W[i,j]=W[j,i]=1.0/( ((ws/cot) ** (1.0/p))+1.0);
+                    # W[i,j]=W[j,i]= 1.0/math.exp((ws/cot) ** (1.0/p));
                     W[i,j]=W[j,i]= 1.0/math.exp((ws) ** (1.0/p));
-                    # W[i,j]=W[j,i]= 1.0/math.exp((ws) ** (1.0/p));
                     # W[i,j]=W[j,i]= 1.0/math.exp(((ws) ** (1.0/p))/cot);
-        np.savetxt(W_path,W,'%.12f');                
+        np.savetxt(W_path,W,'%.30f');                
     print ('计算相似度矩阵结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
 
 
@@ -171,6 +188,7 @@ def run_cf(spa):
     print(W);
     print(S);    
 if __name__ == '__main__':
-    for spa in spas:
-        run_cf(spa);
+#     for spa in spas:
+#         run_cf(spa);
+    run_cf(5);
     pass

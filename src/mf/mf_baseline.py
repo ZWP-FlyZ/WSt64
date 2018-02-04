@@ -14,7 +14,7 @@ import numpy as np;
 import time;
 import math;
 import os;
-
+from tools import SysCheck;
 
 class MF_bl:
     us_shape=None;
@@ -26,8 +26,8 @@ class MF_bl:
         self.size_f = size_f;
         self.mean = mean;
         self.values={
-            'P':np.random.normal(0,rou,(us_shape[0],size_f)),
-            'Q':np.random.normal(0,rou,(us_shape[1],size_f)),
+            'P':np.random.normal(0,rou,(us_shape[0],size_f))/np.sqrt(size_f),
+            'Q':np.random.normal(0,rou,(us_shape[1],size_f))/np.sqrt(size_f),
             'bu':np.zeros(us_shape[0]),
             'bi':np.zeros(us_shape[1])           
         };
@@ -134,34 +134,37 @@ def preprocess(R):
     return  R, sum/cot;
 
 
-
+base_path = r'E:';
+if SysCheck.check()=='l':
+    base_path='/home/zwp/work'
+origin_data = base_path+'/rtdata.txt';
 
 NoneValue= 0;
 # 初始化参数中 正态分布标准差
 rou = 0.1;
 # 在矩阵分解中 正则化 参数
-lamda = 0.005;
+lamda = 0.02;
 
 # 隐属性数
-f = 20;
+f = 100;
 
 #训练次数
-repeat = 20;
+repeat = 30;
 
 # 学习速率
-learn_rate = 0.01;
+learn_rate = 0.009;
 
 
 us_shape=(339,5825);
-case = 1;
+case = 8;
 loadvalues=False;
 continue_train=True;
 
 def mf_base_run(spa,case):
-    train_data = r'E:/Dataset/ws/train/sparseness%d/training%d.txt'%(spa,case);
-    test_data = r'E:/Dataset/ws/test/sparseness%d/test%d.txt'%(spa,case);
+    train_data = base_path+'/Dataset/ws/train/sparseness%d/training%d.txt'%(spa,case);
+    test_data = base_path+'/Dataset/ws/test/sparseness%d/test%d.txt'%(spa,case);
        
-    values_path=r'E:/Dataset/mf_baseline_values/spa%d'%(spa);
+    values_path=base_path+'/Dataset/mf_baseline_values/spa%d'%(spa);
     
     print('开始实验，稀疏度=%d,case=%d'%(spa,case));
     print ('加载训练数据开始');
@@ -227,6 +230,6 @@ def mf_base_run(spa,case):
 
 
 if __name__ == '__main__':
-    mf_base_run(20,case)
+    mf_base_run(5,case)
     
     pass

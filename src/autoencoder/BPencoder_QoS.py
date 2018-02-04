@@ -4,7 +4,7 @@ Created on 2018年1月23日
 
 @author: zwp12
 '''
-from tools import SysCheck
+
 
 '''
 
@@ -19,7 +19,7 @@ import numpy as np;
 import time;
 import math;
 import os;
-
+from tools import SysCheck
 
 
 
@@ -34,10 +34,10 @@ class BPAutoEncoder:
         self.defunc2 =deactfun2;
         self.check_none= check_none;
         self.values= {
-            'w1':np.random.normal(0,rou,(self.size_x,self.size_hidden)),
-            'w2':np.random.normal(0,rou,(self.size_hidden,self.size_x)),
-            'b1':np.random.normal(0,rou,(1,self.size_hidden)),
-            'b2':np.random.normal(0,rou,(1,self.size_x)),
+            'w1':np.random.normal(0,rou,(self.size_x,self.size_hidden))/np.sqrt(hidden_n),
+            'w2':np.random.normal(0,rou,(self.size_hidden,self.size_x))/np.sqrt(hidden_n),
+            'b1':np.random.normal(0,rou,(1,self.size_hidden))/np.sqrt(hidden_n),
+            'b2':np.random.normal(0,rou,(1,self.size_x))/np.sqrt(hidden_n),
             'h':None
             };
     
@@ -136,21 +136,21 @@ class BPAutoEncoder:
         
     def preloadValues(self,path,isUAE=True):
         if os.path.exists(path+'/w1_%s.txt'%(isUAE)):
-            self.values['w1']=np.loadtxt(path+'/w1_%s.txt'%(isUAE), float);
+            self.values['w1']=np.loadtxt(path+'/w1_%s.txt'%(isUAE), np.float64);
         if os.path.exists(path+'/w2_%s.txt'%(isUAE)):
-            self.values['w2']=np.loadtxt(path+'/w2_%s.txt'%(isUAE), float);        
+            self.values['w2']=np.loadtxt(path+'/w2_%s.txt'%(isUAE), np.float64);        
         if os.path.exists(path+'/b1_%s.txt'%(isUAE)):
-            self.values['b1']=np.loadtxt(path+'/b1_%s.txt'%(isUAE), float).reshape(1,self.size_hidden);        
+            self.values['b1']=np.loadtxt(path+'/b1_%s.txt'%(isUAE), np.float64).reshape(1,self.size_hidden);        
         if os.path.exists(path+'/b2_%s.txt'%(isUAE)):
-            self.values['b2']=np.loadtxt(path+'/b2_%s.txt'%(isUAE), float).reshape(1,self.size_x);
+            self.values['b2']=np.loadtxt(path+'/b2_%s.txt'%(isUAE), np.float64).reshape(1,self.size_x);
         if os.path.exists(path+'/h_%s.txt'%(isUAE)):
-            self.values['h']=np.loadtxt(path+'/h_%s.txt'%(isUAE), float);            
+            self.values['h']=np.loadtxt(path+'/h_%s.txt'%(isUAE), np.float64);            
     def saveValues(self,path,isUAE=True):
-        np.savetxt(path+'/w1_%s.txt'%(isUAE),self.values['w1'],'%.6f');
-        np.savetxt(path+'/w2_%s.txt'%(isUAE),self.values['w2'],'%.6f');
-        np.savetxt(path+'/b1_%s.txt'%(isUAE),self.values['b1'],'%.6f');
-        np.savetxt(path+'/b2_%s.txt'%(isUAE),self.values['b2'],'%.6f');
-        np.savetxt(path+'/h_%s.txt'%(isUAE),self.values['h'],'%.6f');    
+        np.savetxt(path+'/w1_%s.txt'%(isUAE),self.values['w1'],'%.12f');
+        np.savetxt(path+'/w2_%s.txt'%(isUAE),self.values['w2'],'%.12f');
+        np.savetxt(path+'/b1_%s.txt'%(isUAE),self.values['b1'],'%.12f');
+        np.savetxt(path+'/b2_%s.txt'%(isUAE),self.values['b2'],'%.12f');
+        np.savetxt(path+'/h_%s.txt'%(isUAE),self.values['h'],'%.12f');    
     def exisValues(self,path,isUAE=True):
         if not os.path.exists(path+'/w1_%s.txt'%(isUAE)):
             return False;
@@ -240,7 +240,7 @@ isUserAutoEncoder=True;
 isICF=False;
 
 # 加载AutoEncoder
-loadvalues= True;
+loadvalues= False;
 continue_train = True;
 # 加载相似度矩阵
 readWcache=False;
@@ -259,10 +259,10 @@ case = 1;
 NoneValue = 0.0;
 
 # autoencoder 参数
-hidden_node = 100;
-learn_rate=0.1;
-repeat = 100;
-rou=0.05
+hidden_node = 150;
+learn_rate=0.089;
+repeat = 200;
+rou=0.1
 
 # 协同过滤参数
 k = 13;
@@ -319,7 +319,7 @@ def encoder_run(spa):
     if loadvalues and encoder.exisValues(values_path):
         encoder.preloadValues(values_path);
     if continue_train:
-        encoder.train(R, learn_rate, repeat,values_path);
+        encoder.train(R, learn_rate, repeat,None);
         encoder.saveValues(values_path);
     PR = encoder.calFill(R);
     print(R);
@@ -367,5 +367,5 @@ def encoder_run(spa):
     print(S)
         
 if __name__ == '__main__':
-    encoder_run(20);
+    encoder_run(10);
     pass

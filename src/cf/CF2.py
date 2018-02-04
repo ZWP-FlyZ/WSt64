@@ -7,7 +7,6 @@ Created on 2018年1月16日
 
 import numpy as np;
 import time;
-import tensorflow as tf;
 import math;
 from math import sqrt
 import os;
