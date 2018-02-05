@@ -13,6 +13,10 @@ BPencoder 代码思路来自论文《基于自编码器的评分预测算法》
 在us矩阵中，空值用NoneVale 替代，在神经网络训练过程中，
 跳过对NoneValue对应节点参数的调整
 
+添加CF_location 
+
+
+
 '''
 
 import numpy as np;
@@ -21,7 +25,7 @@ import math;
 import os;
 from tools import SysCheck
 
-
+from tools.LoadLocation import loadLocation
 
 class BPAutoEncoder:
     
@@ -208,6 +212,7 @@ def preprocess(R):
 
 # CF预测函数 根据W和S预测出u,s的值,
 def predict(u,s,R,W,S):
+    global loc_tab;
     a0 = u;
     a1 = s;
     if isICF:
@@ -219,8 +224,12 @@ def predict(u,s,R,W,S):
             break;
         if R[item,a1] ==NoneValue:
             continue;
-        sum+= W[a0,item]*R[item,a1];
-        cot+=W[a0,item];
+        rw = (W[a0,item]);            
+        if loc_tab[a0]==loc_tab[item]:
+            rw *=loc_w;
+        
+        sum+= rw*R[item,a1];
+        cot+=rw;
     if cot != 0:
         return sum/cot;
     else:
@@ -260,17 +269,21 @@ NoneValue = 0.0;
 
 # autoencoder 参数
 hidden_node = 150;
-learn_rate=0.05;
-repeat = 100;
+learn_rate=0.085;
+repeat = 600;
 rou=0.1
 
 # 协同过滤参数
-k = 13;
+k = 10;
+loc_w=1.0;
 
-
+test_spa=20;
 # 相似列表，shape=(axis0,k),从大到小
 S = None;
 R = None;
+
+loc_tab=None;
+
 # 相识度矩阵
 W = np.full((axis0,axis0), 0, float);
     
@@ -279,7 +292,7 @@ def encoder_run(spa):
     train_data = base_path+'/Dataset/ws/train/sparseness%d/training%d.txt'%(spa,case);
     test_data = base_path+'/Dataset/ws/test/sparseness%d/test%d.txt'%(spa,case);
     W_path = base_path+'/Dataset/ws/BP_CF_W_spa%d_t%d.txt'%(spa,case);
-       
+    loc_path = base_path+'/Dataset/ws';   
     values_path=base_path+'/Dataset/ae_values/spa%d'%(spa);
     
     print('开始实验，稀疏度=%d,case=%d'%(spa,case));
@@ -303,7 +316,17 @@ def encoder_run(spa):
     print ('预处理数据开始');
     tnow = time.time();
     R=preprocess(R);
-    print ('预处理数据结束，耗时 %.2f秒  \n'%((time.time() - tnow)));    
+    print ('预处理数据结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
+        
+    print ('加载地理位置信息开始');
+    tnow = time.time();
+    if isICF:
+        loc_path+='/ws_info.txt';
+    else:
+        loc_path+='/user_info.txt';
+    global loc_tab;        
+    loc_tab = loadLocation(loc_path);
+    print ('加载地理位置信息完成，耗时 %.2f秒，数据总条数%d  \n'%((time.time() - tnow),len(loc_tab)));    
     
     
     print ('训练模型开始');
@@ -328,6 +351,7 @@ def encoder_run(spa):
     print();
 ############# PR 还原处理   ###############
     PR = PR * 20.0;
+    R = R * 20;
     for i in range(PR.shape[0]):
         for j in range(PR.shape[1]):
             if R[i,j]!=NoneValue:
@@ -337,7 +361,42 @@ def encoder_run(spa):
 ############# PR 还原处理   ###############        
     if isUserAutoEncoder:
         PR = PR.T;
+        R = R.T;
     print ('训练模型开始结束，耗时 %.2f秒  \n'%((time.time() - tnow)));  
+
+
+    global W,S;
+    print ('计算相似度矩阵开始');
+    tnow = time.time();
+    oR = R;
+    R=PR;
+    if isICF:
+        R = R.T;
+    if readWcache and os.path.exists(W_path):
+        W = np.loadtxt(W_path, np.float128);
+    else:
+        for i in range(axis0-1):
+            if i%50 ==0:
+                print('----->step%d'%(i))
+            for j in range(i+1,axis0):
+                ws = 0.0;
+                ws += np.sum((R[i,:]-R[j,:])**2);
+                W[i,j]=W[j,i]= 1.0/math.exp(np.sqrt(ws/axis1));
+
+                # origin W[i,j]=W[j,i]=1.0/(ws ** (1.0/p)+1.0);
+                # W[i,j]=W[j,i]=1.0/( ((ws/cot) ** (1.0/p))+1.0);
+                
+                # W[i,j]=W[j,i]= 1.0/math.exp(((ws) ** (1.0/p))/cot);
+        np.savetxt(W_path,W,'%.30f');                
+    print ('计算相似度矩阵结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
+
+
+    print ('生成相似列表开始');
+    tnow = time.time();
+    S = np.argsort(-W)[:,0:k];            
+    print ('生成相似列表开始结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
+
+
 
 
     print ('加载测试数据开始');
@@ -349,10 +408,12 @@ def encoder_run(spa):
     print ('评测开始');
     tnow = time.time();
     mae=0.0;rmse=0.0;cot=0;
+    print('oR',oR);
+    print('R',R);
     for tc in trdata:
         if tc[2]<=0:
             continue;
-        rt = PR[int(tc[0]),int(tc[1])];
+        rt = predict(int(tc[0]),int(tc[1]),R,W,S);
         mae+=abs(rt-tc[2]);
         rmse+=(rt-tc[2])**2;
         cot+=1;
@@ -364,8 +425,8 @@ def encoder_run(spa):
 
 
     print(W)
-    print(S)
+    # print(S)
         
 if __name__ == '__main__':
-    encoder_run(5);
+    encoder_run(test_spa);
     pass

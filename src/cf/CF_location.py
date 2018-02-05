@@ -11,7 +11,6 @@ import math;
 from math import sqrt
 import os;
 from tools import SysCheck
-from tools import LoadLocation;
 from tools.LoadLocation import loadLocation
 
 '''
@@ -28,7 +27,7 @@ if SysCheck.check()=='l':
     base_path='/home/zwp/work'
 origin_data = base_path+'/rtdata.txt';
 
-readWcache = True;
+readWcache = False;
 
 # 数据输入形状
 isICF = False;
@@ -56,8 +55,8 @@ sumS=np.zeros(axis0,float);# 平均向量
 
 spas = [5,10,15,20] #稀疏度
 
-case = 7;# 训练与测试例
-k=250; #
+case = 1;# 训练与测试例
+k=100; #
 p = 2 #
 
 loc_w = 5;
