@@ -275,9 +275,9 @@ rou=0.1
 
 # 协同过滤参数
 k = 10;
-loc_w=1.0;
+loc_w= 7.0;
 
-test_spa=20;
+test_spa=5;
 # 相似列表，shape=(axis0,k),从大到小
 S = None;
 R = None;
@@ -293,7 +293,7 @@ def encoder_run(spa):
     test_data = base_path+'/Dataset/ws/test/sparseness%d/test%d.txt'%(spa,case);
     W_path = base_path+'/Dataset/ws/BP_CF_W_spa%d_t%d.txt'%(spa,case);
     loc_path = base_path+'/Dataset/ws';   
-    values_path=base_path+'/Dataset/ae_values/spa%d'%(spa);
+    values_path=base_path+'/Dataset/ae_values2/spa%d'%(spa);
     
     print('开始实验，稀疏度=%d,case=%d'%(spa,case));
     print ('加载训练数据开始');
@@ -372,7 +372,7 @@ def encoder_run(spa):
     R=PR;
     if isICF:
         R = R.T;
-    if readWcache and os.path.exists(W_path):
+    if readWcache and os.path.exists(W_path):   
         W = np.loadtxt(W_path, np.float128);
     else:
         for i in range(axis0-1):

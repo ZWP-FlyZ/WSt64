@@ -235,13 +235,13 @@ origin_data = base_path+'/rtdata.txt';
 
 us_shape=(339,5825);
 # 是否基于用户的自编码器，预测每个用户的所有服务值
-isUserAutoEncoder=True;
+isUserAutoEncoder=False;
 # 是否基于服务的CF方法
 isICF=False;
 
 # 加载AutoEncoder
-loadvalues= True;
-continue_train = False;
+loadvalues= False;
+continue_train = True;
 # 加载相似度矩阵
 readWcache=False;
 
@@ -259,11 +259,11 @@ case = 1;
 NoneValue = 0.0;
 
 # autoencoder 参数
-hidden_node = 150;
-learn_rate=0.05;
-repeat = 100;
+hidden_node = 800;
+learn_rate=0.08;
+repeat = 20;
 rou=0.1
-
+test_spa=20;
 # 协同过滤参数
 k = 13;
 
@@ -319,7 +319,7 @@ def encoder_run(spa):
     if loadvalues and encoder.exisValues(values_path):
         encoder.preloadValues(values_path);
     if continue_train:
-        encoder.train(R, learn_rate, repeat,None);
+        encoder.train(R, learn_rate, repeat,values_path);
         encoder.saveValues(values_path);
     PR = encoder.calFill(R);
     print(R);
@@ -367,5 +367,5 @@ def encoder_run(spa):
     print(S)
         
 if __name__ == '__main__':
-    encoder_run(5);
+    encoder_run(test_spa);
     pass
