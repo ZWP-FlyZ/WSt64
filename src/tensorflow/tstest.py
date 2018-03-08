@@ -4,10 +4,10 @@ Created on 2018年2月6日
 
 @author: zwp
 '''
-import tensorflow as tf;
 
+import tensorflow as tf;
 def run():
-    
+    print(dir(tf));
     pass;
 
 

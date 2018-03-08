@@ -36,6 +36,7 @@ if __name__ == '__main__':
                 [1,2,3],
                 [7,19,2]
                 ]);
+    
 
     # print(n);
     k = np.argsort(-n)[:,0:2];
@@ -51,10 +52,24 @@ if __name__ == '__main__':
 #     print(W);
 #     print(W.shape);
     
+    n1 = np.array([[1,2,3],[4,5,6]]);
+    n2 = np.array([[6,5,4],[3,2,1]]);   
+    
+    print(n1*n2);
+    #print(np.matmul(n1,n2));
+    
+    
 
+    y_sum_types = np.array([50,100]);
+    py_sum_types= np.array([55,95]);
+
+    err_type=np.array([20,25]);
+    recall=(y_sum_types-err_type)/y_sum_types;
+    prec = (y_sum_types-err_type) / py_sum_types;
+    macro_f1 = np.mean(2*recall*prec/(recall+prec));
     
+    print(recall,prec,macro_f1);
     
-    
-    
+    print(np.argwhere(y_sum_types==100));
     
     pass

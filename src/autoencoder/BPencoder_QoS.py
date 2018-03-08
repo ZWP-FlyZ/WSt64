@@ -235,13 +235,13 @@ origin_data = base_path+'/rtdata.txt';
 
 us_shape=(339,5825);
 # 是否基于用户的自编码器，预测每个用户的所有服务值
-isUserAutoEncoder=False;
+isUserAutoEncoder=True;
 # 是否基于服务的CF方法
 isICF=False;
 
 # 加载AutoEncoder
-loadvalues= False;
-continue_train = True;
+loadvalues= True;
+continue_train = False;
 # 加载相似度矩阵
 readWcache=False;
 
@@ -259,9 +259,9 @@ case = 1;
 NoneValue = 0.0;
 
 # autoencoder 参数
-hidden_node = 800;
+hidden_node = 500;
 learn_rate=0.08;
-repeat = 20;
+repeat = 260;
 rou=0.1
 test_spa=20;
 # 协同过滤参数
