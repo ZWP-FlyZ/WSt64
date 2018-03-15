@@ -1,4 +1,5 @@
 eclipse.preferences.version=1
+encoding//src/AEwithLocation/BPAE.py=utf-8
 encoding//src/autoencoder/BPencoder2.py=utf-8
 encoding//src/autoencoder/BPencoder_CF.py=utf-8
 encoding//src/autoencoder/BPencoder_CF_loc.py=utf-8
