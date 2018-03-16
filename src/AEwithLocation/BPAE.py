@@ -61,36 +61,69 @@ class BPAutoEncoder:
             return (mae/cot,math.sqrt(rmse/cot));
     
     # 更新参数
-    def layer_optimize(self,py,y):
+    def layer_optimize(self,py,y,mask_value=0):
         b1 = self.values['b1'];
         w1 = self.values['w1'];
         b2 = self.values['b2'];
         w2 = self.values['w2'];
         h  = self.values['h'];
         lr = self.lr;
-        gjs=np.zeros(self.size_x);
-        for j in range(self.size_x):
-            if self.check_none(y[j]):
-                continue;
-            k = py[j];
-            gj=(k-y[j])*self.defunc2(k);
-            gjs[j]=gj;
-            k = lr*gj;
-            b2[0,j]=b2[0,j]-k;
-            w2[:,j]=w2[:,j]-k*h;
+        
+        #替换py中无效的值为mask_value;
+        py = np.where(y!=mask_value,py,y);
+        
+        origin_w2 = w2.copy();
+        # 输出层的调整
+        gjs = (py-y)*self.defunc2(py);# 输出层中的梯度
+        tmp = gjs*lr;
+        b2 = b2 - tmp; # 调整b2
+        
+        deltaW = np.matmul(
+            np.reshape(h,(self.size_hidden,1)),# 隐层输出
+            np.reshape(tmp, (1,self.size_x))
+            );
+        w2 = w2 - deltaW;# 调整w2
+        
+        tmp = origin_w2* gjs;
+        tmp =np.sum(tmp,axis=1); 
+        gis = tmp*self.defunc1(h);
+        
+        tmp = gis* lr;
+        
+        b1 = b1 - tmp;# 更新b1
 
-        gis = np.zeros(self.size_hidden);
-        for i in range(self.size_hidden):
-            k=np.sum(gjs*w2[i,:]);
-            k=self.defunc1(h[i])*k;
-            b1[0,i]=b1[0,i]-lr*k;
-            gis[i]=k;
-            
-        tmp =lr*gis;
-        for k in range(self.size_x):
-            if self.check_none(y[k]):
-                continue;
-            w1[k,:]=w1[k,:]-tmp*y[k];            
+        deltaW = np.matmul(
+            np.reshape(y,(self.size_x,1)),# 输入层
+            np.reshape(tmp, (1,self.size_hidden))
+            );
+        w1 = w1 - deltaW;# 调整w1
+        
+#         mask=np.divide(y,y,out=np.zeros_like(y),where=y!=mask_value);
+        
+        
+#         gjs=np.zeros(self.size_x);
+#         for j in range(self.size_x):
+#             if self.check_none(y[j]):
+#                 continue;
+#             k = py[j];
+#             gj=(k-y[j])*self.defunc2(k);
+#             gjs[j]=gj;
+#             k = lr*gj;
+#             b2[0,j]=b2[0,j]-k;
+#             w2[:,j]=w2[:,j]-k*h;
+# 
+#         gis = np.zeros(self.size_hidden);
+#         for i in range(self.size_hidden):
+#             k=np.sum(gjs*w2[i,:]);
+#             k=self.defunc1(h[i])*k;
+#             b1[0,i]=b1[0,i]-lr*k;
+#             gis[i]=k;
+#             
+#         tmp =lr*gis;
+#         for k in range(self.size_x):
+#             if self.check_none(y[k]):
+#                 continue;
+#             w1[k,:]=w1[k,:]-tmp*y[k];            
             
         self.values['b2']=b2;
         self.values['w2']=w2;        

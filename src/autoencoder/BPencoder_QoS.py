@@ -80,6 +80,7 @@ class BPAutoEncoder:
         w2 = self.values['w2'];
         h  = self.values['h'];
         lr = self.lr;
+        ori_w2 = w2.copy();
         gjs=np.zeros(self.size_x);
         for j in range(self.size_x):
             if self.check_none(y[j]):
@@ -93,7 +94,7 @@ class BPAutoEncoder:
 
         gis = np.zeros(self.size_hidden);
         for i in range(self.size_hidden):
-            k=np.sum(gjs*w2[i,:]);
+            k=np.sum(gjs*ori_w2[i,:]);
             k=self.defunc1(h[i])*k;
             b1[0,i]=b1[0,i]-lr*k;
             gis[i]=k;
@@ -240,8 +241,8 @@ isUserAutoEncoder=True;
 isICF=False;
 
 # 加载AutoEncoder
-loadvalues= True;
-continue_train = False;
+loadvalues= False;
+continue_train = True;
 # 加载相似度矩阵
 readWcache=False;
 
@@ -259,7 +260,7 @@ case = 1;
 NoneValue = 0.0;
 
 # autoencoder 参数
-hidden_node = 500;
+hidden_node = 150;
 learn_rate=0.08;
 repeat = 260;
 rou=0.1

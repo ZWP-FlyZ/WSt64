@@ -5,6 +5,7 @@ Created on 2018年1月23日
 @author: zwp12
 '''
 
+
 '''
 
 BPencoder 代码思路来自论文《基于自编码器的评分预测算法》
@@ -18,7 +19,7 @@ import numpy as np;
 import time;
 import math;
 import os;
-
+from tools import SysCheck
 
 
 
@@ -33,10 +34,10 @@ class BPAutoEncoder:
         self.defunc2 =deactfun2;
         self.check_none= check_none;
         self.values= {
-            'w1':np.random.normal(0,rou,(self.size_x,self.size_hidden)),
-            'w2':np.random.normal(0,rou,(self.size_hidden,self.size_x)),
-            'b1':np.random.normal(0,rou,(1,self.size_hidden)),
-            'b2':np.random.normal(0,rou,(1,self.size_x)),
+            'w1':np.random.normal(0,rou,(self.size_x,self.size_hidden))/np.sqrt(hidden_n),
+            'w2':np.random.normal(0,rou,(self.size_hidden,self.size_x))/np.sqrt(hidden_n),
+            'b1':np.random.normal(0,rou,(1,self.size_hidden))/np.sqrt(hidden_n),
+            'b2':np.random.normal(0,rou,(1,self.size_x))/np.sqrt(hidden_n),
             'h':None
             };
     
@@ -72,37 +73,45 @@ class BPAutoEncoder:
             return (mae/cot,math.sqrt(rmse/cot));
     
     # 更新参数
-    def layer_optimize(self,py,y):
+    def layer_optimize(self,py,y,mask_value=0.0):
         b1 = self.values['b1'];
         w1 = self.values['w1'];
         b2 = self.values['b2'];
         w2 = self.values['w2'];
         h  = self.values['h'];
         lr = self.lr;
-        ori_w2 = w2.copy();
-        gjs=np.zeros(self.size_x);
-        for j in range(self.size_x):
-            if self.check_none(y[j]):
-                continue;
-            k = py[j];
-            gj=(k-y[j])*self.defunc2(k);
-            gjs[j]=gj;
-            k = lr*gj;
-            b2[0,j]=b2[0,j]-k;
-            w2[:,j]=w2[:,j]-k*h;
+        
 
-        gis = np.zeros(self.size_hidden);
-        for i in range(self.size_hidden):
-            k=np.sum(gjs*ori_w2[i,:]);
-            k=self.defunc1(h[i])*k;
-            b1[0,i]=b1[0,i]-lr*k;
-            gis[i]=k;
-            
-        tmp =lr*gis;
-        for k in range(self.size_x):
-            if self.check_none(y[k]):
-                continue;
-            w1[k,:]=w1[k,:]-tmp*y[k];             
+        #替换py中无效的值为mask_value;
+        py = np.where(y!=mask_value,py,y);
+        
+        origin_w2 = w2.copy();
+        # 输出层的调整
+        gjs = (py-y)*self.defunc2(py);# 输出层中的梯度
+        tmp = gjs*lr;
+        b2 = b2 - tmp; # 调整b2
+        
+        deltaW = np.matmul(
+            np.reshape(h,(self.size_hidden,1)),# 隐层输出
+            np.reshape(tmp, (1,self.size_x))
+            );
+        w2 = w2 - deltaW;# 调整w2
+        
+        tmp = origin_w2* gjs;
+        tmp =np.sum(tmp,axis=1); 
+        gis = tmp*self.defunc1(h);
+        
+        tmp = gis* lr;
+        
+        b1 = b1 - tmp;# 更新b1
+
+        deltaW = np.matmul(
+            np.reshape(y,(self.size_x,1)),# 输入层
+            np.reshape(tmp, (1,self.size_hidden))
+            );
+        w1 = w1 - deltaW;# 调整w1
+        
+           
             
         self.values['b2']=b2;
         self.values['w2']=w2;        
@@ -120,7 +129,6 @@ class BPAutoEncoder:
             #self.lr=self.lr*0.95;
             maeAll=0.0;rmseAll=0.0;
             shape1=X.shape[0];
-            
             for i in range(shape1):
                 x = X[i];
                 py = self.calculate(x);
@@ -131,27 +139,27 @@ class BPAutoEncoder:
 #             print(py);
             if save_path != None:
                 self.saveValues(save_path);
-            print('---->step%d 耗时%.2f秒 MAE=%.3f RMSE=%.3f'%(rep+1,(time.time()-tnow),maeAll,rmseAll));
+            print('---->step%d 耗时%.2f秒 MAE=%.6f RMSE=%.6f'%(rep+1,(time.time()-tnow),maeAll,rmseAll));
         print('\n-->训练结束，总耗时%.2f秒  learn_rate=%.3f,repeat=%d \n'%((time.time()-now),learn_rate,repeat));
-        
+ 
         
     def preloadValues(self,path,isUAE=True):
         if os.path.exists(path+'/w1_%s.txt'%(isUAE)):
-            self.values['w1']=np.loadtxt(path+'/w1_%s.txt'%(isUAE), float);
+            self.values['w1']=np.loadtxt(path+'/w1_%s.txt'%(isUAE), np.float64);
         if os.path.exists(path+'/w2_%s.txt'%(isUAE)):
-            self.values['w2']=np.loadtxt(path+'/w2_%s.txt'%(isUAE), float);        
+            self.values['w2']=np.loadtxt(path+'/w2_%s.txt'%(isUAE), np.float64);        
         if os.path.exists(path+'/b1_%s.txt'%(isUAE)):
-            self.values['b1']=np.loadtxt(path+'/b1_%s.txt'%(isUAE), float);        
+            self.values['b1']=np.loadtxt(path+'/b1_%s.txt'%(isUAE), np.float64).reshape(1,self.size_hidden);        
         if os.path.exists(path+'/b2_%s.txt'%(isUAE)):
-            self.values['b2']=np.loadtxt(path+'/b2_%s.txt'%(isUAE), float);
+            self.values['b2']=np.loadtxt(path+'/b2_%s.txt'%(isUAE), np.float64).reshape(1,self.size_x);
         if os.path.exists(path+'/h_%s.txt'%(isUAE)):
-            self.values['h']=np.loadtxt(path+'/h_%s.txt'%(isUAE), float);            
+            self.values['h']=np.loadtxt(path+'/h_%s.txt'%(isUAE), np.float64);            
     def saveValues(self,path,isUAE=True):
-        np.savetxt(path+'/w1_%s.txt'%(isUAE),self.values['w1'],'%.6f');
-        np.savetxt(path+'/w2_%s.txt'%(isUAE),self.values['w2'],'%.6f');
-        np.savetxt(path+'/b1_%s.txt'%(isUAE),self.values['b1'],'%.6f');
-        np.savetxt(path+'/b2_%s.txt'%(isUAE),self.values['b2'],'%.6f');
-        np.savetxt(path+'/h_%s.txt'%(isUAE),self.values['h'],'%.6f');    
+        np.savetxt(path+'/w1_%s.txt'%(isUAE),self.values['w1'],'%.12f');
+        np.savetxt(path+'/w2_%s.txt'%(isUAE),self.values['w2'],'%.12f');
+        np.savetxt(path+'/b1_%s.txt'%(isUAE),self.values['b1'],'%.12f');
+        np.savetxt(path+'/b2_%s.txt'%(isUAE),self.values['b2'],'%.12f');
+        np.savetxt(path+'/h_%s.txt'%(isUAE),self.values['h'],'%.12f');    
     def exisValues(self,path,isUAE=True):
         if not os.path.exists(path+'/w1_%s.txt'%(isUAE)):
             return False;
@@ -166,6 +174,7 @@ class BPAutoEncoder:
         return True;
     def getValues(self):
         return self.values;    
+   
 ############################ end class ###########################    
     
 
@@ -227,7 +236,9 @@ def predict(u,s,R,W,S):
         return 0.2;
 
 
-base_path = r'E:/Dataset/wst';
+base_path = r'E:';
+if SysCheck.check()=='l':
+    base_path='/home/zwp/work'
 origin_data = base_path+'/rtdata.txt';
 
 
@@ -238,7 +249,8 @@ isUserAutoEncoder=True;
 isICF=False;
 
 # 加载AutoEncoder
-loadvalues= True;
+loadvalues= False;
+continue_train = True;
 # 加载相似度矩阵
 readWcache=False;
 
@@ -256,11 +268,11 @@ case = 1;
 NoneValue = 0.0;
 
 # autoencoder 参数
-hidden_node = 100;
-learn_rate=0.1;
-repeat = 200;
-rou=0.05
-
+hidden_node = 150;
+learn_rate=0.08;
+repeat = 400;
+rou=0.1
+test_spa=20;
 # 协同过滤参数
 k = 13;
 
@@ -273,11 +285,11 @@ W = np.full((axis0,axis0), 0, float);
     
 
 def encoder_run(spa):
-    train_data = r'E:/Dataset/ws/train/sparseness%d/training%d.txt'%(spa,case);
-    test_data = r'E:/Dataset/ws/test/sparseness%d/test%d.txt'%(spa,case);
-    W_path = r'E:/Dataset/ws/BP_CF_W_spa%d_t%d.txt'%(spa,case);
+    train_data = base_path+'/Dataset/ws/train/sparseness%d/training%d.txt'%(spa,case);
+    test_data = base_path+'/Dataset/ws/test/sparseness%d/test%d.txt'%(spa,case);
+    W_path = base_path+'/Dataset/ws/BP_CF_W_spa%d_t%d.txt'%(spa,case);
        
-    values_path=r'E:/Dataset/ae_values/spa%d'%(spa);
+    values_path=base_path+'/Dataset/ae_values/spa%d'%(spa);
     
     print('开始实验，稀疏度=%d,case=%d'%(spa,case));
     print ('加载训练数据开始');
@@ -315,7 +327,7 @@ def encoder_run(spa):
         R = R.T;
     if loadvalues and encoder.exisValues(values_path):
         encoder.preloadValues(values_path);
-    else:
+    if continue_train:
         encoder.train(R, learn_rate, repeat,values_path);
         encoder.saveValues(values_path);
     PR = encoder.calFill(R);
@@ -336,36 +348,6 @@ def encoder_run(spa):
         PR = PR.T;
     print ('训练模型开始结束，耗时 %.2f秒  \n'%((time.time() - tnow)));  
 
-    global W,S;
-    print ('计算相似度矩阵开始');
-    tnow = time.time();
-
-    R=PR;
-    if isICF:
-        R = R.T;
-    if readWcache and os.path.exists(W_path):
-        W = np.loadtxt(W_path, float);
-    else:
-        for i in range(axis0-1):
-            if i%50 ==0:
-                print('----->step%d'%(i))
-            for j in range(i+1,axis0):
-                ws = 0.0;
-                ws += np.sum((R[i,:]-R[j,:])**2);
-                W[i,j]=W[j,i]= 1.0/math.exp(np.sqrt(ws/axis1));
-
-                # origin W[i,j]=W[j,i]=1.0/(ws ** (1.0/p)+1.0);
-                # W[i,j]=W[j,i]=1.0/( ((ws/cot) ** (1.0/p))+1.0);
-                
-                # W[i,j]=W[j,i]= 1.0/math.exp(((ws) ** (1.0/p))/cot);
-        np.savetxt(W_path,W,'%.6f');                
-    print ('计算相似度矩阵结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
-
-
-    print ('生成相似列表开始');
-    tnow = time.time();
-    S = np.argsort(-W)[:,0:k];            
-    print ('生成相似列表开始结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
 
     print ('加载测试数据开始');
     tnow = time.time();
@@ -379,7 +361,7 @@ def encoder_run(spa):
     for tc in trdata:
         if tc[2]<=0:
             continue;
-        rt = predict(int(tc[0]),int(tc[1]),R,W,S);
+        rt = PR[int(tc[0]),int(tc[1])];
         mae+=abs(rt-tc[2]);
         rmse+=(rt-tc[2])**2;
         cot+=1;
@@ -387,12 +369,12 @@ def encoder_run(spa):
     rmse= np.sqrt(rmse/cot);
     print ('评测完成，耗时 %.2f秒\n'%((time.time() - tnow)));    
 
-    print('实验结束，总耗时 %.2f秒,稀疏度=%d,MAE=%.3f,RMSE=%.3f\n'%((time.time()-now),spa,mae,rmse));
+    print('实验结束，总耗时 %.2f秒,稀疏度=%d,MAE=%.6f,RMSE=%.6f\n'%((time.time()-now),spa,mae,rmse));
 
 
     print(W)
     print(S)
         
 if __name__ == '__main__':
-    encoder_run(10);
+    encoder_run(test_spa);
     pass

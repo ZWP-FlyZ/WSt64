@@ -84,6 +84,7 @@ class BPAutoEncoder:
         w2 = self.values['w2'];
         h  = self.values['h'];
         lr = self.lr;
+        ori_w2 = w2.copy();
         gjs=np.zeros(self.size_x);
         for j in range(self.size_x):
             if self.check_none(y[j]):
@@ -97,7 +98,7 @@ class BPAutoEncoder:
 
         gis = np.zeros(self.size_hidden);
         for i in range(self.size_hidden):
-            k=np.sum(gjs*w2[i,:]);
+            k=np.sum(gjs*ori_w2[i,:]);
             k=self.defunc1(h[i])*k;
             b1[0,i]=b1[0,i]-lr*k;
             gis[i]=k;
@@ -106,7 +107,7 @@ class BPAutoEncoder:
         for k in range(self.size_x):
             if self.check_none(y[k]):
                 continue;
-            w1[k,:]=w1[k,:]-tmp*y[k];            
+            w1[k,:]=w1[k,:]-tmp*y[k];      
             
         self.values['b2']=b2;
         self.values['w2']=w2;        
