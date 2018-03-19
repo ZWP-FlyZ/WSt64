@@ -4,6 +4,12 @@ Created on 2018年3月15日
 
 @author: zwp
 '''
+
+'''
+    由误差逆传播更新参数的自编码器
+'''
+
+
 import numpy as np;
 import math;
 import time;
