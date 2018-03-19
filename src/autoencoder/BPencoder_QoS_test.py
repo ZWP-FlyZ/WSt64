@@ -119,7 +119,7 @@ class BPAutoEncoder:
         self.values['w1']=w1;
                         
 
-    def train(self,X,learn_rate,repeat,save_path=None):
+    def train(self,X,learn_rate,repeat,save_path=None,lr_de=50):
         self.lr=learn_rate;
         X = X.T;
         print('-->训练开始，learn_rate=%f,repeat=%d \n'%(learn_rate,repeat));
@@ -137,6 +137,8 @@ class BPAutoEncoder:
                 maeAll+=mae/shape1;
                 rmseAll+=rmse/shape1;
 #             print(py);
+            if rep>0 and (rep%lr_de == 0):
+                self.lr *= 0.9;
             if save_path != None:
                 self.saveValues(save_path);
             print('---->step%d 耗时%.2f秒 MAE=%.6f RMSE=%.6f'%(rep+1,(time.time()-tnow),maeAll,rmseAll));
@@ -249,8 +251,8 @@ isUserAutoEncoder=True;
 isICF=False;
 
 # 加载AutoEncoder
-loadvalues= False;
-continue_train = True;
+loadvalues= True;
+continue_train = False;
 # 加载相似度矩阵
 readWcache=False;
 
@@ -270,9 +272,9 @@ NoneValue = 0.0;
 # autoencoder 参数
 hidden_node = 150;
 learn_rate=0.08;
-repeat = 400;
+repeat = 600;
 rou=0.1
-test_spa=20;
+test_spa=10;
 # 协同过滤参数
 k = 13;
 
@@ -337,6 +339,7 @@ def encoder_run(spa):
     print();
 ############# PR 还原处理   ###############
     PR = PR * 20.0;
+    R = R * 20.0;    
     for i in range(PR.shape[0]):
         for j in range(PR.shape[1]):
             if R[i,j]!=NoneValue:

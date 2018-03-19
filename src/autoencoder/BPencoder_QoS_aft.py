@@ -329,6 +329,7 @@ def encoder_run(spa):
     print();
 ############# PR 还原处理   ###############
     PR = PR * 20.0;
+    R = R * 20.0;
     for i in range(PR.shape[0]):
         for j in range(PR.shape[1]):
             if R[i,j]!=NoneValue:

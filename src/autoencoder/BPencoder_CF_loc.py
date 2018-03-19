@@ -269,16 +269,16 @@ case = 1;
 NoneValue = 0.0;
 
 # autoencoder 参数
-hidden_node = 500;
+hidden_node = 150;
 learn_rate=0.06;
 repeat = 100;
 rou=0.1
 
 # 协同过滤参数
-k = 10;
+k = 20;
 loc_w= 1.0;
 
-test_spa=20;
+test_spa=10;
 # 相似列表，shape=(axis0,k),从大到小
 S = None;
 R = None;
