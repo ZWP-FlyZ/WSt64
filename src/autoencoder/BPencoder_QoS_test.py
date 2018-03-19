@@ -138,7 +138,7 @@ class BPAutoEncoder:
                 rmseAll+=rmse/shape1;
 #             print(py);
             if rep>0 and (rep%lr_de == 0):
-                self.lr *= 0.9;
+                self.lr *= 0.94;
             if save_path != None:
                 self.saveValues(save_path);
             print('---->step%d 耗时%.2f秒 MAE=%.6f RMSE=%.6f'%(rep+1,(time.time()-tnow),maeAll,rmseAll));
@@ -251,8 +251,8 @@ isUserAutoEncoder=True;
 isICF=False;
 
 # 加载AutoEncoder
-loadvalues= True;
-continue_train = False;
+loadvalues= False;
+continue_train = True;
 # 加载相似度矩阵
 readWcache=False;
 
@@ -272,7 +272,7 @@ NoneValue = 0.0;
 # autoencoder 参数
 hidden_node = 150;
 learn_rate=0.08;
-repeat = 600;
+repeat = 700;
 rou=0.1
 test_spa=10;
 # 协同过滤参数

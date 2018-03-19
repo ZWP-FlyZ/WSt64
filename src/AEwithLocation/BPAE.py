@@ -61,13 +61,16 @@ class BPAutoEncoder:
             return (mae/cot,math.sqrt(rmse/cot));
     
     # 更新参数
-    def layer_optimize(self,py,y,mask_value=0):
+    def layer_optimize(self,py,y,
+                       learn_rate,# 学习速率
+                       mask_value=0
+                       ):
         b1 = self.values['b1'];
         w1 = self.values['w1'];
         b2 = self.values['b2'];
         w2 = self.values['w2'];
         h  = self.values['h'];
-        lr = self.lr;
+        lr = learn_rate;
         
         #替换py中无效的值为mask_value;
         py = np.where(y!=mask_value,py,y);
@@ -98,43 +101,20 @@ class BPAutoEncoder:
             );
         w1 = w1 - deltaW;# 调整w1
         
-#         mask=np.divide(y,y,out=np.zeros_like(y),where=y!=mask_value);
-        
-        
-#         gjs=np.zeros(self.size_x);
-#         for j in range(self.size_x):
-#             if self.check_none(y[j]):
-#                 continue;
-#             k = py[j];
-#             gj=(k-y[j])*self.defunc2(k);
-#             gjs[j]=gj;
-#             k = lr*gj;
-#             b2[0,j]=b2[0,j]-k;
-#             w2[:,j]=w2[:,j]-k*h;
-# 
-#         gis = np.zeros(self.size_hidden);
-#         for i in range(self.size_hidden):
-#             k=np.sum(gjs*w2[i,:]);
-#             k=self.defunc1(h[i])*k;
-#             b1[0,i]=b1[0,i]-lr*k;
-#             gis[i]=k;
-#             
-#         tmp =lr*gis;
-#         for k in range(self.size_x):
-#             if self.check_none(y[k]):
-#                 continue;
-#             w1[k,:]=w1[k,:]-tmp*y[k];            
-            
+
         self.values['b2']=b2;
         self.values['w2']=w2;        
         self.values['b1']=b1;
         self.values['w1']=w1;
                         
 
-    def train(self,X,learn_rate,repeat,save_path=None):
-        self.lr=learn_rate;
+    def train(self,X,learn_param,repeat,save_path=None):
+        self.lp=learn_param;
+        lr = learn_param[0];
+        de_repeat = learn_param[1];
+        de_rate = learn_param[2];
         X = X.T;
-        print('-->训练开始，learn_rate=%f,repeat=%d \n'%(learn_rate,repeat));
+        print('-->训练开始，learn_param=',self.lp,'repeat=%d \n'%(repeat));
         now = time.time();
         for rep in range(repeat):
             tnow=time.time();
@@ -145,14 +125,16 @@ class BPAutoEncoder:
                 x = X[i];
                 py = self.calculate(x);
                 mae,rmse=self.evel(py, x);
-                self.layer_optimize(py,x);
+                self.layer_optimize(py,x,learn_rate=lr);
                 maeAll+=mae/shape1;
                 rmseAll+=rmse/shape1;
 #             print(py);
+            if rep>0 and rep%de_repeat==0:
+                lr*=de_rate;
             if save_path != None:
                 self.saveValues(save_path);
             print('---->step%d 耗时%.2f秒 MAE=%.6f RMSE=%.6f'%(rep+1,(time.time()-tnow),maeAll,rmseAll));
-        print('\n-->训练结束，总耗时%.2f秒  learn_rate=%.3f,repeat=%d \n'%((time.time()-now),learn_rate,repeat));
+        print('\n-->训练结束，总耗时%.2f秒 ,repeat=%d \n'%((time.time()-now),repeat));
  
         
     def preloadValues(self,path,isUAE=True):
