@@ -20,6 +20,7 @@ import time;
 import math;
 import os;
 from tools import SysCheck
+from AEwithLocation import BPAE;
 
 
 
@@ -246,7 +247,7 @@ origin_data = base_path+'/rtdata.txt';
 
 us_shape=(339,5825);
 # 是否基于用户的自编码器，预测每个用户的所有服务值
-isUserAutoEncoder=True;
+isUserAutoEncoder=False;
 # 是否基于服务的CF方法
 isICF=False;
 
@@ -272,9 +273,9 @@ NoneValue = 0.0;
 # autoencoder 参数
 hidden_node = 150;
 learn_rate=0.08;
-repeat = 700;
+repeat = 300;
 rou=0.1
-test_spa=10;
+test_spa=20;
 # 协同过滤参数
 k = 13;
 
@@ -322,15 +323,15 @@ def encoder_run(spa):
     tx = us_shape[0];
     if isUserAutoEncoder:
         tx = us_shape[1];
-    encoder = BPAutoEncoder(tx,hidden_node,
+    encoder = BPAE.BPAutoEncoder(tx,hidden_node,
                             actfunc1,deactfunc1,
                              actfunc1,deactfunc1,check_none);
-    if isUserAutoEncoder:
+    if not isUserAutoEncoder:
         R = R.T;
     if loadvalues and encoder.exisValues(values_path):
         encoder.preloadValues(values_path);
     if continue_train:
-        encoder.train(R, learn_rate, repeat,values_path);
+        encoder.train(R, (learn_rate,100,0.99), repeat,values_path);
         encoder.saveValues(values_path);
     PR = encoder.calFill(R);
     print(R);
@@ -347,7 +348,7 @@ def encoder_run(spa):
     print(PR);
     
 ############# PR 还原处理   ###############        
-    if isUserAutoEncoder:
+    if not isUserAutoEncoder:
         PR = PR.T;
     print ('训练模型开始结束，耗时 %.2f秒  \n'%((time.time() - tnow)));  
 

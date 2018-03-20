@@ -41,7 +41,7 @@ def preprocess(R):
     for i in range(R.shape[0]):
         for j in range(R.shape[1]):
             if R[i,j]<0.0:
-                R[i,j] = 0.0;
+                R[i,j] = 0.0;    
     #return  (R -  mean) / ek;
     return  R / 20.0; 
 
@@ -99,8 +99,8 @@ case = 1;
 NoneValue = 0.0;
 
 # autoencoder 参数
-hidden_node = 150;
-learn_rate=0.08;
+hidden_node = 50;
+learn_rate=0.1;
 repeat = 300;
 rou=0.1
 test_spa=20;
@@ -164,20 +164,23 @@ def encoder_run(spa):
     
     print ('训练模型开始');
     tnow = time.time();
+#     tx = R.shape[0];
+#     if isUserAutoEncoder:
+#         tx = R.shape[1];
     tx = R.shape[0];
-    if isUserAutoEncoder:
-        tx = R.shape[1];
     encoder = BPAE.BPAutoEncoder(tx,hidden_node,
                             actfunc1,deactfunc1,
                              actfunc1,deactfunc1,check_none);
-    if isUserAutoEncoder:
-        R = R.T;
+#     if isUserAutoEncoder:
+#         R = R.T;
     if loadvalues and encoder.exisValues(values_path):
         encoder.preloadValues(values_path);
     if continue_train:
-        encoder.train(R, (learn_rate,100,0.99), repeat,values_path);
+        encoder.train(R.T, (learn_rate,100,0.99), repeat,values_path);
         encoder.saveValues(values_path);
-    PR = encoder.calFill(R);
+    PR = encoder.calFill(R.T);####
+    PR = PR.T
+    
     print(R);
     print();
     print(PR);
@@ -192,8 +195,8 @@ def encoder_run(spa):
     print(PR);
     
 ############# PR 还原处理   ###############        
-    if isUserAutoEncoder:
-        PR = PR.T;
+#     if isUserAutoEncoder:
+#         PR = PR.T;
     print ('训练模型开始结束，耗时 %.2f秒  \n'%((time.time() - tnow)));  
 
 
@@ -211,8 +214,6 @@ def encoder_run(spa):
         sid = int(tc[1]);
         if tc[2]<=0:
             continue;
-#         if sid not in loc_index:
-#             continue;
         sids  = np.argwhere(loc_index==sid);
         if len(sids)==0: continue;
         sid = sids[0,0];

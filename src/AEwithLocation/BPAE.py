@@ -19,7 +19,7 @@ rou = 0.1;
 
 class BPAutoEncoder:
     
-    def __init__(self,X_n,hidden_n,actfun1,deactfun1,actfun2,deactfun2,check_none):
+    def __init__(self,X_n,hidden_n,actfun1,deactfun1,actfun2,deactfun2,check_none,batch=1):
         self.size_x = X_n;
         self.size_hidden=hidden_n;
         self.func1 = actfun1;
@@ -27,6 +27,7 @@ class BPAutoEncoder:
         self.func2 = actfun2;
         self.defunc2 =deactfun2;
         self.check_none= check_none;
+        self.batch=batch;
         self.values= {
             'w1':np.random.normal(0,rou,(self.size_x,self.size_hidden))/np.sqrt(hidden_n),
             'w2':np.random.normal(0,rou,(self.size_hidden,self.size_x))/np.sqrt(hidden_n),
@@ -36,33 +37,34 @@ class BPAutoEncoder:
             };
     
     ## 注意这里计算过方法必须保证NoneValue=0
-    def calculate(self,x):
-        x = np.reshape(x, (1,self.size_x));
+    def calculate(self,x,save_h=True):
+        xsp1 = x.shape[0];
+        x = np.reshape(x, (xsp1,self.size_x));
         h = self.func1(np.matmul(x,self.values['w1'])+self.values['b1']);
-        self.values['h']=h.reshape(self.size_hidden);
+        if save_h:self.values['h']=h;
         y = self.func2(np.matmul(h,self.values['w2'])+self.values['b2']);
-        return y.reshape(self.size_x,);
+        return y;
 
-    def calFill(self,R):
-        PR = np.zeros(R.shape,float);
-        for j in range(R.shape[1]):
-            py = self.calculate(R[:,j]);
-            PR[:,j] = py;
-        return PR;
+    def calFill(self,R,x_axis=1):
+        '''
+        R中与自编码器输入x的x_size对应轴号
+        '''
+        tR = R;
+        if x_axis==0:
+            tR = R.T;  
+        return self.calculate(tR,False);
 
     
-    def evel(self,py,y):
-        mae=0.0;rmse=0.0;
-        cot=0;
-        for i in range(self.size_x):
-            if self.check_none(y[i]):
-                continue;
-            cot+=1;
-            delta=abs(y[i]-py[i]);
-            mae+=delta;
-            rmse+=delta**2;
+    def evel(self,py,y,mask_value=0):
+        '''
+        假定py已经去除mask项
+        '''
+        cot=len(np.argwhere(y!=mask_value));
+        delta = np.abs(py-y);
+        mae = np.sum(delta);
+        rmse = np.sum(delta**2);
         if cot==0:
-            return (-1,-1);
+            return (0,0);
         else:
             return (mae/cot,math.sqrt(rmse/cot));
     
@@ -85,27 +87,26 @@ class BPAutoEncoder:
         # 输出层的调整
         gjs = (py-y)*self.defunc2(py);# 输出层中的梯度
         tmp = gjs*lr;
-        b2 = b2 - tmp; # 调整b2
+        b2 = b2 - np.sum(tmp,axis=0); # 调整b2
         
         deltaW = np.matmul(
-            np.reshape(h,(self.size_hidden,1)),# 隐层输出
-            np.reshape(tmp, (1,self.size_x))
+            np.reshape(h,(-1,self.size_hidden,1)),# 隐层输出
+            np.reshape(tmp, (-1,1,self.size_x))
             );
-        w2 = w2 - deltaW;# 调整w2
+        w2 = w2 - np.sum(deltaW,axis=0);# 调整w2
         
-        tmp = origin_w2* gjs;
-        tmp =np.sum(tmp,axis=1); 
+        tmp = np.matmul(gjs,origin_w2.T);
         gis = tmp*self.defunc1(h);
         
         tmp = gis* lr;
         
-        b1 = b1 - tmp;# 更新b1
+        b1 = b1 - np.sum(tmp,axis=0);# 更新b1
 
         deltaW = np.matmul(
-            np.reshape(y,(self.size_x,1)),# 输入层
-            np.reshape(tmp, (1,self.size_hidden))
+            np.reshape(y,(-1,self.size_x,1)),# 输入层
+            np.reshape(tmp, (-1,1,self.size_hidden))
             );
-        w1 = w1 - deltaW;# 调整w1
+        w1 = w1 - np.sum(deltaW,axis=0);# 调整w1
         
 
         self.values['b2']=b2;
@@ -114,23 +115,32 @@ class BPAutoEncoder:
         self.values['w1']=w1;
                         
 
-    def train(self,X,learn_param,repeat,save_path=None):
+    def train(self,X,learn_param,repeat,save_path=None,mask_value=0):
+        '''
+        注意输入X为一个矩阵(batch,x_size)
+        '''
         self.lp=learn_param;
         lr = learn_param[0];
         de_repeat = learn_param[1];
         de_rate = learn_param[2];
-        X = X.T;
         print('-->训练开始，learn_param=',self.lp,'repeat=%d \n'%(repeat));
         now = time.time();
+        shape1=X.shape[0];
+        shape2=X.shape[1];
         for rep in range(repeat):
             tnow=time.time();
             #self.lr=self.lr*0.95;
             maeAll=0.0;rmseAll=0.0;
-            shape1=X.shape[0];
+
             for i in range(shape1):
-                x = X[i];
+                start = i * self.batch;
+                end = min(start+self.batch,shape2)
+                x = X[start:end,:];
                 py = self.calculate(x);
-                mae,rmse=self.evel(py, x);
+
+                
+                mae,rmse=self.evel(py, x,mask_value);
+                
                 self.layer_optimize(py,x,learn_rate=lr);
                 maeAll+=mae/shape1;
                 rmseAll+=rmse/shape1;
