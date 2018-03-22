@@ -59,14 +59,12 @@ class BPAutoEncoder:
         '''
         假定py已经去除mask项
         '''
-        cot=len(np.argwhere(y!=mask_value));
-        delta = np.abs(py-y);
-        mae = np.sum(delta);
-        rmse = np.sum(delta**2);
-        if cot==0:
-            return (0,0);
-        else:
-            return (mae/cot,math.sqrt(rmse/cot));
+        index = np.where(y!=mask_value);
+        if len(index[0])==0:return 0,0;
+        delta = np.abs(py[index]-y[index]);
+        mae = np.average(delta);
+        rmse = np.average(delta**2);
+        return mae,math.sqrt(rmse);
     
     # 更新参数
     def layer_optimize(self,py,y,
@@ -87,26 +85,29 @@ class BPAutoEncoder:
         # 输出层的调整
         gjs = (py-y)*self.defunc2(py);# 输出层中的梯度
         tmp = gjs*lr;
-        b2 = b2 - np.sum(tmp,axis=0); # 调整b2
+        b2 = b2 - tmp; # 调整b2
         
         deltaW = np.matmul(
-            np.reshape(h,(-1,self.size_hidden,1)),# 隐层输出
-            np.reshape(tmp, (-1,1,self.size_x))
+            np.reshape(h,(self.size_hidden,1)),# 隐层输出
+            np.reshape(tmp, (1,self.size_x))
             );
-        w2 = w2 - np.sum(deltaW,axis=0);# 调整w2
+        w2 = w2 - deltaW;# 调整w2
         
-        tmp = np.matmul(gjs,origin_w2.T);
+#         tmp = origin_w2* gjs;
+#         tmp =np.sum(tmp,axis=1);
+#         tmp = np.matmul(gjs,origin_w2.T);
+        tmp = np.matmul(gjs,w2.T);
         gis = tmp*self.defunc1(h);
         
         tmp = gis* lr;
         
-        b1 = b1 - np.sum(tmp,axis=0);# 更新b1
+        b1 = b1 - tmp;# 更新b1
 
         deltaW = np.matmul(
-            np.reshape(y,(-1,self.size_x,1)),# 输入层
-            np.reshape(tmp, (-1,1,self.size_hidden))
+            np.reshape(y,(self.size_x,1)),# 输入层
+            np.reshape(tmp, (1,self.size_hidden))
             );
-        w1 = w1 - np.sum(deltaW,axis=0);# 调整w1
+        w1 = w1 - deltaW;# 调整w1
         
 
         self.values['b2']=b2;
@@ -129,13 +130,13 @@ class BPAutoEncoder:
         shape2=X.shape[1];
         for rep in range(repeat):
             tnow=time.time();
-            #self.lr=self.lr*0.95;
             maeAll=0.0;rmseAll=0.0;
 
             for i in range(shape1):
-                start = i * self.batch;
-                end = min(start+self.batch,shape2)
-                x = X[start:end,:];
+#                 start = i * self.batch;
+#                 end = min(start+self.batch,shape2)
+#                 x = X[start:end,:];
+                x = X[i:i+1,:];
                 py = self.calculate(x);
 
                 

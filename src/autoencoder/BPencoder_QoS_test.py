@@ -272,7 +272,7 @@ NoneValue = 0.0;
 
 # autoencoder 参数
 hidden_node = 150;
-learn_rate=0.08;
+learn_rate=0.07;
 repeat = 300;
 rou=0.1
 test_spa=20;

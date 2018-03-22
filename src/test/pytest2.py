@@ -18,8 +18,8 @@ if __name__ == '__main__':
     c = np.array([0,2]);
     print(b[:,c]);
     
-    t = np.argwhere(b!=2);
-    print(b[0:1,:]);
+    t = np.where(b!=2);
+    print(t,b[[0,1],[1,2]]);
     
     
     d = np.array([[1,2,3,4],

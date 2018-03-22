@@ -260,9 +260,9 @@ case = 1;
 NoneValue = 0.0;
 
 # autoencoder 参数
-hidden_node = 200;
-learn_rate=0.08;
-repeat = 300;
+hidden_node = 150;
+learn_rate=0.085;
+repeat = 100;
 rou=0.1
 test_spa=20;
 # 协同过滤参数

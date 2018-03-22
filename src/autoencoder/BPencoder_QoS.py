@@ -94,7 +94,7 @@ class BPAutoEncoder:
 
         gis = np.zeros(self.size_hidden);
         for i in range(self.size_hidden):
-            k=np.sum(gjs*ori_w2[i,:]);
+            k=np.sum(gjs*w2[i,:]);
             k=self.defunc1(h[i])*k;
             b1[0,i]=b1[0,i]-lr*k;
             gis[i]=k;
@@ -236,7 +236,7 @@ origin_data = base_path+'/rtdata.txt';
 
 us_shape=(339,5825);
 # 是否基于用户的自编码器，预测每个用户的所有服务值
-isUserAutoEncoder=True;
+isUserAutoEncoder=False;
 # 是否基于服务的CF方法
 isICF=False;
 
@@ -261,8 +261,8 @@ NoneValue = 0.0;
 
 # autoencoder 参数
 hidden_node = 150;
-learn_rate=0.08;
-repeat = 260;
+learn_rate=0.085;
+repeat = 600;
 rou=0.1
 test_spa=20;
 # 协同过滤参数
