@@ -9,10 +9,10 @@ from AEwithLocation import Location;
 
 
 if __name__ == '__main__':
-    path = r'/home/zwp/work/Dataset/ws/ws_info.txt';
+    path = r'/home/zwp/work/Dataset/ws/user_info.txt';
     lp = Location.LocationProcesser(path);
     di = lp.loc_dict;
-    eg=50;
+    eg=30;
     cot =0;
     cot_s =0;
     for item in di:

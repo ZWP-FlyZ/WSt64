@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 '''
-Created on 2018年3月19日
+Created on 2018年3月23日
 
 @author: zwp
 '''
 
-
 import numpy as np;
 import time;
 from tools import SysCheck
-from AEwithLocation import BPAE,Location,LocBPAE;
+from AEwithLocation import Location,LocBPAE;
 
 
 def actfunc1(x):
@@ -102,12 +101,16 @@ NoneValue = 0.0;
 # autoencoder 参数
 hidden_node = 150;
 learn_rate=0.08;
-repeat = 500;
+learn_param = [learn_rate,100,0.99];
+repeat = 600;
 rou=0.1
 test_spa=20;
 # 协同过滤参数
 k = 13;
 
+oeg = 100;
+name_list_train=['p_all','n_all'];
+name_list_pr=['p_all','n_all','all'];
 
 # 相似列表，shape=(axis0,k),从大到小
 S = None;
@@ -121,7 +124,7 @@ def encoder_run(spa):
     test_data = base_path+'/Dataset/ws/test/sparseness%d/test%d.txt'%(spa,case);
     W_path = base_path+'/Dataset/ws/BP_CF_W_spa%d_t%d.txt'%(spa,case);
     loc_path = base_path+'/Dataset/ws';   
-    values_path=base_path+'/Dataset/ae_values/spa%d'%(spa);
+    values_path=base_path+'/Dataset/loc_ae_values/spa%d'%(spa);
     
     if isUserAutoEncoder:
         loc_path+='/user_info.txt';
@@ -153,59 +156,53 @@ def encoder_run(spa):
     print ('地域信息加载结束，耗时 %.2f秒  \n'%((time.time() - tnow)));    
     
     
-    print ('选取特定地域数据开始');
-    tnow = time.time();
-#     fR = R.copy();
-#     loc_name = 'United States';
-#     loc_index = lp.loc_dict[loc_name];
-#     loc_index = np.array(loc_index)-1;
-#     if isUserAutoEncoder:
-#         R = R[loc_index,:];
-#     else:
-#         R = R[:,loc_index];
-    print ('选取特定地域数据结束，耗时 %.2f秒  \n'%((time.time() - tnow)));     
-    
     
     print ('预处理数据开始');
     tnow = time.time();
     R=preprocess(R);
     print ('预处理数据结束，耗时 %.2f秒  \n'%((time.time() - tnow)));    
     
-    print ('选取特定地域数据开始');
-    tnow = time.time();
-    lae = LocBPAE.LocAutoEncoder(lp,40,R,hidden_node,
-                                 [actfunc1,deactfunc1,
-                                   actfunc1,deactfunc1],isUserAutoEncoder);
-    
-    loc_name = 'other2';
-    loc_index = lae.loc_aes[loc_name][0];
-    loc_index = np.array(loc_index)-1;
-    if isUserAutoEncoder:
-        R = R[loc_index,:];
-    else:
-        R = R[:,loc_index];    
-    print ('选取特定地域数据结束，耗时 %.2f秒  \n'%((time.time() - tnow)));    
+#     print ('选取特定地域数据开始');
+#     tnow = time.time();
+#     lae = LocBPAE.LocAutoEncoder(lp,40,R,hidden_node,
+#                                  [actfunc1,deactfunc1,
+#                                    actfunc1,deactfunc1],isUserAutoEncoder);
+#     
+#     loc_name = None;
+#     loc_index = lae.loc_aes[loc_name][0];
+#     loc_index = np.array(loc_index)-1;
+#     if isUserAutoEncoder:
+#         R = R[loc_index,:];
+#     else:
+#         R = R[:,loc_index];    
+#     print ('选取特定地域数据结束，耗时 %.2f秒  \n'%((time.time() - tnow)));    
     
     
     
     
     print ('训练模型开始');
     tnow = time.time();
-#     tx = us_shape[0];
-#     if isUserAutoEncoder:
-#         tx = us_shape[1];
-#     encoder = BPAE.BPAutoEncoder(tx,hidden_node,
-#                             actfunc1,deactfunc1,
-#                              actfunc1,deactfunc1,check_none);
-    encoder = lae.loc_aes[loc_name][1];
+    lae = LocBPAE.LocAutoEncoder(lp,oeg,R,hidden_node,
+                                 [actfunc1,deactfunc1,
+                                   actfunc1,deactfunc1],isUserAutoEncoder);    
+    
     if not isUserAutoEncoder:
         R = R.T;
-    if loadvalues and encoder.exisValues(values_path):
-        encoder.preloadValues(values_path);
+    if loadvalues and lae.exitValue(values_path,name_list_train):
+        lae.loadValue(values_path,name_list_train);
     if continue_train:
-        encoder.train(R, (learn_rate,100,0.99), repeat,None);
-        encoder.saveValues(values_path);
-    PR = encoder.calFill(R);####
+        lae.train_by_names(name_list_train,learn_param,repeat,values_path);
+        
+        # lae.saveValues(values_path);
+
+    lae.loadValue(values_path,name_list_pr);
+    PR = np.zeros_like(R);
+
+    for i in range(len(name_list_pr)-1,-1,-1):
+        n = name_list_pr[i];
+        nind = lae.getIndexByLocName(n);
+        tPR = lae.fill(n,R[nind,:]);
+        PR[nind,:]=tPR;
     if not isUserAutoEncoder:
         R = R.T;
         PR = PR.T;
@@ -242,22 +239,8 @@ def encoder_run(spa):
         uid = int(tc[0]);
         sid = int(tc[1]);
         if tc[2]<=0:
-            continue;
-        
-        if isUserAutoEncoder:
-            tagid = uid;
-        else:
-            tagid = sid;
-        
-        tids  = np.argwhere(loc_index==tagid);
-        if len(tids)==0: continue;
-        tid = tids[0,0];
-        if isUserAutoEncoder:
-            usid = (tid,sid);
-        else:
-            usid = (uid,tid);
-                    
-        rt = PR[usid];
+            continue;                    
+        rt = PR[uid,sid];
         mae+=abs(rt-tc[2]);
         rmse+=(rt-tc[2])**2;
         cot+=1;

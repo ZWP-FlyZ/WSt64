@@ -9,8 +9,7 @@ Created on 2018年3月19日
 import numpy as np;
 import time;
 from tools import SysCheck
-from AEwithLocation import BPAE,Location,LocBPAE;
-
+from AEwithLocation import BPAE,Location;
 
 def actfunc1(x):
     return 1.0/( 1.0 + np.exp(np.array(-x,np.float64)));
@@ -102,7 +101,7 @@ NoneValue = 0.0;
 # autoencoder 参数
 hidden_node = 150;
 learn_rate=0.08;
-repeat = 500;
+repeat = 300;
 rou=0.1
 test_spa=20;
 # 协同过滤参数
@@ -155,14 +154,14 @@ def encoder_run(spa):
     
     print ('选取特定地域数据开始');
     tnow = time.time();
-#     fR = R.copy();
-#     loc_name = 'United States';
-#     loc_index = lp.loc_dict[loc_name];
-#     loc_index = np.array(loc_index)-1;
-#     if isUserAutoEncoder:
-#         R = R[loc_index,:];
-#     else:
-#         R = R[:,loc_index];
+    fR = R.copy();
+    loc_name = 'United States';
+    loc_index = lp.loc_dict[loc_name];
+    loc_index = np.array(loc_index)-1;
+    if isUserAutoEncoder:
+        R = R[loc_index,:];
+    else:
+        R = R[:,loc_index];
     print ('选取特定地域数据结束，耗时 %.2f秒  \n'%((time.time() - tnow)));     
     
     
@@ -171,33 +170,15 @@ def encoder_run(spa):
     R=preprocess(R);
     print ('预处理数据结束，耗时 %.2f秒  \n'%((time.time() - tnow)));    
     
-    print ('选取特定地域数据开始');
-    tnow = time.time();
-    lae = LocBPAE.LocAutoEncoder(lp,40,R,hidden_node,
-                                 [actfunc1,deactfunc1,
-                                   actfunc1,deactfunc1],isUserAutoEncoder);
-    
-    loc_name = 'other2';
-    loc_index = lae.loc_aes[loc_name][0];
-    loc_index = np.array(loc_index)-1;
-    if isUserAutoEncoder:
-        R = R[loc_index,:];
-    else:
-        R = R[:,loc_index];    
-    print ('选取特定地域数据结束，耗时 %.2f秒  \n'%((time.time() - tnow)));    
-    
-    
-    
     
     print ('训练模型开始');
     tnow = time.time();
-#     tx = us_shape[0];
-#     if isUserAutoEncoder:
-#         tx = us_shape[1];
-#     encoder = BPAE.BPAutoEncoder(tx,hidden_node,
-#                             actfunc1,deactfunc1,
-#                              actfunc1,deactfunc1,check_none);
-    encoder = lae.loc_aes[loc_name][1];
+    tx = us_shape[0];
+    if isUserAutoEncoder:
+        tx = us_shape[1];
+    encoder = BPAE.BPAutoEncoder(tx,hidden_node,
+                            actfunc1,deactfunc1,
+                             actfunc1,deactfunc1,check_none);
     if not isUserAutoEncoder:
         R = R.T;
     if loadvalues and encoder.exisValues(values_path):

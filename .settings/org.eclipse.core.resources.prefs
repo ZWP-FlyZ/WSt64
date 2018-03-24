@@ -1,7 +1,9 @@
 eclipse.preferences.version=1
 encoding//src/AEwithLocation/BPAE.py=utf-8
+encoding//src/AEwithLocation/LBPAE_run.py=utf-8
 encoding//src/AEwithLocation/Location.py=utf-8
 encoding//src/AEwithLocation/SingleLocTest.py=utf-8
+encoding//src/AEwithLocation/SingleLocTest2.py=utf-8
 encoding//src/autoencoder/BPencoder2.py=utf-8
 encoding//src/autoencoder/BPencoder_CF.py=utf-8
 encoding//src/autoencoder/BPencoder_CF_loc.py=utf-8
@@ -20,6 +22,7 @@ encoding//src/test/DataSetCal.py=utf-8
 encoding//src/test/DataSetCal2.py=utf-8
 encoding//src/test/EncoderTest.py=utf-8
 encoding//src/test/LocationProcessTest.py=utf-8
+encoding//src/test/pathtest.py=utf-8
 encoding//src/test/pytest.py=utf-8
 encoding//src/test/pytest2.py=utf-8
 encoding//src/tools/LoadLocation.py=utf-8

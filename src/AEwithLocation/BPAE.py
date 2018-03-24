@@ -19,7 +19,7 @@ rou = 0.1;
 
 class BPAutoEncoder:
     
-    def __init__(self,X_n,hidden_n,actfun1,deactfun1,actfun2,deactfun2,check_none,batch=1):
+    def __init__(self,X_n,hidden_n,actfun1,deactfun1,actfun2,deactfun2,check_none=None):
         self.size_x = X_n;
         self.size_hidden=hidden_n;
         self.func1 = actfun1;
@@ -27,7 +27,6 @@ class BPAutoEncoder:
         self.func2 = actfun2;
         self.defunc2 =deactfun2;
         self.check_none= check_none;
-        self.batch=batch;
         self.values= {
             'w1':np.random.normal(0,rou,(self.size_x,self.size_hidden))/np.sqrt(hidden_n),
             'w2':np.random.normal(0,rou,(self.size_hidden,self.size_x))/np.sqrt(hidden_n),
@@ -96,7 +95,7 @@ class BPAutoEncoder:
 #         tmp = origin_w2* gjs;
 #         tmp =np.sum(tmp,axis=1);
 #         tmp = np.matmul(gjs,origin_w2.T);
-        tmp = np.matmul(gjs,w2.T);
+        tmp = np.matmul(gjs,origin_w2.T);
         gis = tmp*self.defunc1(h);
         
         tmp = gis* lr;
@@ -166,6 +165,8 @@ class BPAutoEncoder:
         if os.path.exists(path+'/h_%s.txt'%(isUAE)):
             self.values['h']=np.loadtxt(path+'/h_%s.txt'%(isUAE), np.float64);            
     def saveValues(self,path,isUAE=True):
+        if not os.path.isdir(path):
+            os.makedirs(path);
         np.savetxt(path+'/w1_%s.txt'%(isUAE),self.values['w1'],'%.12f');
         np.savetxt(path+'/w2_%s.txt'%(isUAE),self.values['w2'],'%.12f');
         np.savetxt(path+'/b1_%s.txt'%(isUAE),self.values['b1'],'%.12f');
