@@ -80,8 +80,8 @@ isUserAutoEncoder=True;
 isICF=False;
 
 # 加载AutoEncoder
-loadvalues= False;
-continue_train = True;
+loadvalues= True;
+continue_train = False;
 # 加载相似度矩阵
 readWcache=False;
 
@@ -101,16 +101,16 @@ NoneValue = 0.0;
 # autoencoder 参数
 hidden_node = 150;
 learn_rate=0.08;
-learn_param = [learn_rate,100,0.99];
-repeat = 600;
+learn_param = [learn_rate,100,0.96];
+repeat = 400;
 rou=0.1
 test_spa=20;
 # 协同过滤参数
 k = 13;
 
 oeg = 100;
-name_list_train=['p_all','n_all'];
-name_list_pr=['p_all','n_all','all'];
+name_list_train=['n_all','p_all','all'];
+name_list_pr=['all'];
 
 # 相似列表，shape=(axis0,k),从大到小
 S = None;
@@ -234,6 +234,13 @@ def encoder_run(spa):
 
     print ('评测开始');
     tnow = time.time();
+    tmp_vect=[];
+    for n in name_list_pr:
+        tmp_vect.append([lae.getIndexByLocName(n),
+                         0.0,# mae
+                         0.0,# rmse
+                         0]);# 
+    
     mae=0.0;rmse=0.0;cot=0;
     for tc in trdata:
         uid = int(tc[0]);
@@ -241,9 +248,30 @@ def encoder_run(spa):
         if tc[2]<=0:
             continue;                    
         rt = PR[uid,sid];
-        mae+=abs(rt-tc[2]);
-        rmse+=(rt-tc[2])**2;
+        tm = abs(rt-tc[2]);
+        trm =  (rt-tc[2])**2;
+        mae+=tm;
+        rmse+=trm;
         cot+=1;
+        
+        if isUserAutoEncoder:
+            tagind = uid;
+        else:
+            tagind = sid;
+        for v in tmp_vect:
+            if tagind not in v[0]:
+                continue;
+            v[1]+=tm;
+            v[2]+=trm;
+            v[3]+=1;
+    for v in tmp_vect:
+        if v[3] == 0:
+            continue;
+        print(v[1]);
+        v[1] = v[1] / v[3];
+        v[2] = np.sqrt(v[2]/v[3]);
+    for i in range(len(name_list_pr)):
+        print(name_list_pr[i]+':',tmp_vect[i][1:])
     mae = mae * 1.0 / cot;
     rmse= np.sqrt(rmse/cot);
     print ('评测完成，耗时 %.2f秒\n'%((time.time() - tnow)));    
