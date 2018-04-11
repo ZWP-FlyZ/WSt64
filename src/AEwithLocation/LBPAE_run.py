@@ -13,10 +13,19 @@ from AEwithLocation import Location,LocBPAE;
 
 def actfunc1(x):
     return 1.0/( 1.0 + np.exp(np.array(-x,np.float64)));
-
-
+  
+  
 def deactfunc1(x):
     return x*(1.0-x);
+
+
+# def actfunc1(x):
+#     return np.log(1+np.exp(x));
+#  
+#  
+# def deactfunc1(x):
+#     return 1-np.exp(-x);
+
 
 
 def actfunc2(x):
@@ -80,8 +89,8 @@ isUserAutoEncoder=True;
 isICF=False;
 
 # 加载AutoEncoder
-loadvalues= True;
-continue_train = False;
+loadvalues= False;
+continue_train = True;
 # 加载相似度矩阵
 readWcache=False;
 
@@ -100,17 +109,17 @@ NoneValue = 0.0;
 
 # autoencoder 参数
 hidden_node = 150;
-learn_rate=0.08;
+learn_rate=0.04;
 learn_param = [learn_rate,100,0.96];
-repeat = 400;
+repeat = 350;
 rou=0.1
 test_spa=20;
 # 协同过滤参数
 k = 13;
 
-oeg = 100;
-name_list_train=['n_all','p_all','all'];
-name_list_pr=['all'];
+oeg = 15;
+name_list_train=['p_all'];
+name_list_pr=['p_all','n_all'];
 
 # 相似列表，shape=(axis0,k),从大到小
 S = None;
@@ -235,12 +244,18 @@ def encoder_run(spa):
     print ('评测开始');
     tnow = time.time();
     tmp_vect=[];
+    lp_vect=[];
     for n in name_list_pr:
         tmp_vect.append([lae.getIndexByLocName(n),
                          0.0,# mae
                          0.0,# rmse
                          0]);# 
-    
+    for n in lae.loc_aes:
+        lp_vect.append([lae.getIndexByLocName(n),
+                         0.0,# mae
+                         0.0,# rmse
+                         0,n]);#
+                             
     mae=0.0;rmse=0.0;cot=0;
     for tc in trdata:
         uid = int(tc[0]);
@@ -264,14 +279,36 @@ def encoder_run(spa):
             v[1]+=tm;
             v[2]+=trm;
             v[3]+=1;
+            
+        for v in lp_vect:
+            if tagind not in v[0]:
+                continue;
+            v[1]+=tm;
+            v[2]+=trm;
+            v[3]+=1;        
+        
+        
     for v in tmp_vect:
         if v[3] == 0:
             continue;
-        print(v[1]);
+        print('pr_bef->\t',v[1]);
         v[1] = v[1] / v[3];
         v[2] = np.sqrt(v[2]/v[3]);
     for i in range(len(name_list_pr)):
-        print(name_list_pr[i]+':',tmp_vect[i][1:])
+        print('pr->\t'+name_list_pr[i]+':\t',tmp_vect[i][1:]);
+    
+    print();
+        
+    for v in lp_vect:
+        if v[3] == 0:
+            continue;
+        print('lp_bef->\t\t',v[4],':\t\t',v[1]);
+        v[1] = v[1] / v[3];
+        v[2] = np.sqrt(v[2]/v[3]);
+    for i in range(len(lp_vect)):
+        print('lp->:\t\t',lp_vect[i][1:]);        
+        
+        
     mae = mae * 1.0 / cot;
     rmse= np.sqrt(rmse/cot);
     print ('评测完成，耗时 %.2f秒\n'%((time.time() - tnow)));    

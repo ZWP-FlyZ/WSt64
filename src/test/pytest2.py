@@ -54,5 +54,20 @@ if __name__ == '__main__':
     testfunc(*para_vect);
     
     
+    print(set([]*100));
+    
+    
+    a = np.reshape(np.array([1,2,3,4]),[4,1]);
+    b = np.reshape(np.arange(12),[4,3]);
+    print(a,b)
+    print (a-b);
+    
+    
+    
+    a = np.arange(-3,3,0.05);
+    print(a);
+    print(np.tanh(0));
+    
+    
     
     pass
