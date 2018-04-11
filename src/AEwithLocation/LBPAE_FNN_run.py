@@ -8,8 +8,7 @@ Created on 2018年3月23日
 import numpy as np;
 import time;
 from tools import SysCheck
-from AEwithLocation import Location,LocBPAE;
-
+from AEwithLocation import Location,LocBPAE,FeatureNN;
 
 def actfunc1(x):
     return 1.0/( 1.0 + np.exp(np.array(-x,np.float64)));
@@ -75,6 +74,13 @@ def predict(u,s,R,W,S):
     else:
         return 0.2;
 
+def getComp(f_size,a):
+    '''
+    获得补集
+    '''
+    return np.setdiff1d(np.arange(f_size),np.array(a));
+
+
 
 base_path = r'E:';
 if SysCheck.check()=='l':
@@ -109,17 +115,20 @@ NoneValue = 0.0;
 
 # autoencoder 参数
 hidden_node = 150;
-learn_rate=0.04;
-learn_param = [learn_rate,100,0.96];
+learn_rate=0.09;
+learn_param = [learn_rate,100,0.99];
 repeat = 500;
 rou=0.1
 test_spa=20;
 # 协同过滤参数
 k = 13;
 
-oeg = 15;
-name_list_train=['p_all','n_all'];
-name_list_pr=['p_all','n_all'];
+oeg = 150;
+name_extend_data=['United States'];
+k_extend_data=[100];
+
+name_list_train=['United States'];
+name_list_pr=['United States','all'];
 
 # 相似列表，shape=(axis0,k),从大到小
 S = None;
@@ -134,6 +143,9 @@ def encoder_run(spa):
     W_path = base_path+'/Dataset/ws/BP_CF_W_spa%d_t%d.txt'%(spa,case);
     loc_path = base_path+'/Dataset/ws';   
     values_path=base_path+'/Dataset/loc_ae_values/spa%d'%(spa);
+    
+    FNN_path = base_path+'/Dataset/loc_ae_values/fnn';
+    
     
     if isUserAutoEncoder:
         loc_path+='/user_info.txt';
@@ -171,6 +183,31 @@ def encoder_run(spa):
     R=preprocess(R);
     print ('预处理数据结束，耗时 %.2f秒  \n'%((time.time() - tnow)));    
     
+    print ('FNN开始');
+    tnow = time.time();
+    lae = LocBPAE.LocAutoEncoder(lp,oeg,R,hidden_node,
+                             [actfunc1,deactfunc1,
+                               actfunc1,deactfunc1],isUserAutoEncoder);
+                               
+    hnn = FeatureNN.HidNN(FNN_path,
+                          isUserAutoEncoder,
+                          R,[test_spa,case,NoneValue],
+                          );
+    f_size = us_shape[0];
+    if not isUserAutoEncoder:
+        f_size = us_shape[1];
+    for i in range(len(name_extend_data)):
+        n  = name_extend_data[i];
+        nk = k_extend_data[i];
+        a = lae.getIndexByLocName(n);
+        ca = getComp(f_size, a);
+        extend_index = hnn.getExtendDataIndex(a, ca, nk);
+        lae.extendData(n, extend_index);
+        pass;                  
+        
+    
+    print ('FNN结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
+    
 #     print ('选取特定地域数据开始');
 #     tnow = time.time();
 #     lae = LocBPAE.LocAutoEncoder(lp,40,R,hidden_node,
@@ -191,9 +228,6 @@ def encoder_run(spa):
     
     print ('训练模型开始');
     tnow = time.time();
-    lae = LocBPAE.LocAutoEncoder(lp,oeg,R,hidden_node,
-                                 [actfunc1,deactfunc1,
-                                   actfunc1,deactfunc1],isUserAutoEncoder);    
     
     if not isUserAutoEncoder:
         R = R.T;
@@ -313,6 +347,7 @@ def encoder_run(spa):
     mae = mae * 1.0 / cot;
     rmse= np.sqrt(rmse/cot);
     print ('评测完成，耗时 %.2f秒\n'%((time.time() - tnow)));    
+    
 
     print('实验结束，总耗时 %.2f秒,稀疏度=%d,MAE=%.6f,RMSE=%.6f\n'%((time.time()-now),spa,mae,rmse));
 

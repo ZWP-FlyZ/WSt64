@@ -30,7 +30,7 @@ class LocAutoEncoder(object):
     other为所有反类总和，other2为所有正类总和
     '''
     loc_aes = {p_all_name:[[]],n_all_name:[[]],all_name:[[]]};
-    
+    loc_aes_ext = {p_all_name:[[]],n_all_name:[[]],all_name:[[]]};
 
     # 原始数据集R
     R=None;
@@ -73,6 +73,7 @@ class LocAutoEncoder(object):
         for k,v in lp.loc_dict.items():
             v = (np.array(v)-1).tolist();
             if len(v)>=oeg:
+                self.loc_aes_ext[k]=[];
                 self.loc_aes[k]=[v];
                 self.loc_aes[self.p_all_name][0].extend(v);
             else:
@@ -89,7 +90,7 @@ class LocAutoEncoder(object):
         pass;
 
     def train_one(self,loc_name,learn_param,repeat,save_path=None,mask_value=0):
-        ind = self.loc_aes[loc_name][0];
+        ind = self.getIndexByLocNameWithExt(loc_name);
         encoder = self.loc_aes[loc_name][1];
         X = self.R;
         if not self.isUAE:
@@ -124,6 +125,13 @@ class LocAutoEncoder(object):
         
     def getIndexByLocName(self,loc_name):
         return self.loc_aes[loc_name][0];
+    
+    def  getIndexByLocNameWithExt(self,loc_name):
+        ext = self.loc_aes_ext[loc_name];
+        index_cp = self.loc_aes[loc_name][0].copy();
+        index_cp.extend(ext);
+        return index_cp;
+    
     
     def saveValue(self,value_path,name_list=None):
         if name_list!=None:
@@ -163,6 +171,5 @@ class LocAutoEncoder(object):
         return True;
         pass;
     
-
-
-        
+    def extendData(self,name,eData):
+        return self.loc_aes_ext[name].extend(eData);

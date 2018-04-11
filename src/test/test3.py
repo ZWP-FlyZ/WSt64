@@ -9,16 +9,27 @@ import numpy as np;
 import random;
 
 
-a = np.reshape(np.arange(50),[5,5,2]);
-b = a[[1,2,4],:,:];
-c = b[:,[0,3],:];
-ac = np.average(c,axis=0);
+a = np.reshape(np.arange(25),[5,5]);
+b = np.array([0,1,2,3,4]);
+
 print(a);
-print(b);
-print(c)
-print(ac);
-res = np.sort(ac,axis=0);
-print(res);
+print(a-b);
+c = np.subtract(a,b,out=np.zeros_like(a),where=b!=1);
+sc = np.sqrt(np.sum(c**2,axis=1));
+ec = np.divide(1,sc,where=sc!=0);
+print(c);
+print(sc);
+print(np.argsort(-ec));
+
+wb = np.argwhere(a>0); 
+
+print(wb);
+
+print(a-b.reshape([-1,1]));
+
+print(np.argsort(b));
+
+print(np.repeat(b.reshape((1,5)), 2, axis=0));
 
 if __name__ == '__main__':
     
