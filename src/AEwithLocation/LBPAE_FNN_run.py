@@ -123,12 +123,12 @@ test_spa=20;
 # 协同过滤参数
 k = 13;
 
-oeg = 150;
-name_extend_data=['United States'];
-k_extend_data=[100];
+oeg = 100;
+name_extend_data=['p_all'];
+k_extend_data=[30];
 
-name_list_train=['United States'];
-name_list_pr=['United States','all'];
+name_list_train=['p_all'];
+name_list_pr=['p_all','all'];
 
 # 相似列表，shape=(axis0,k),从大到小
 S = None;
@@ -201,11 +201,12 @@ def encoder_run(spa):
         nk = k_extend_data[i];
         a = lae.getIndexByLocName(n);
         ca = getComp(f_size, a);
-        extend_index = hnn.getExtendDataIndex(a, ca, nk);
+        extend_index = hnn.getExtendDataIndex2(a, ca, nk);
+        print(n,extend_index);
         lae.extendData(n, extend_index);
         pass;                  
-        
-    
+    ex = lae.getWeightByLocNameWithExt('p_all');
+    print(ex);
     print ('FNN结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
     
 #     print ('选取特定地域数据开始');
@@ -234,7 +235,7 @@ def encoder_run(spa):
     if loadvalues and lae.exitValue(values_path,name_list_train):
         lae.loadValue(values_path,name_list_train);
     if continue_train:
-        lae.train_by_names(name_list_train,learn_param,repeat,values_path);
+        lae.train_by_names(name_list_train,learn_param,repeat,values_path,with_weight=True);
         
         # lae.saveValues(values_path);
 

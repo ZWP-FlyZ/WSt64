@@ -31,6 +31,18 @@ print(np.argsort(b));
 
 print(np.repeat(b.reshape((1,5)), 2, axis=0));
 
+tmp = np.argsort(a,axis=1)[:,:2];
+print(tmp);
+tmp = tmp.reshape((-1,));
+print(tmp)
+
+
+su = np.zeros((5));
+
+su[tmp]=su[tmp]+1;
+print(su);
+
+
 if __name__ == '__main__':
     
 #     for i in range(100):

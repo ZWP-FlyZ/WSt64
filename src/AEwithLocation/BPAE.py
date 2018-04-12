@@ -68,7 +68,8 @@ class BPAutoEncoder:
     # 更新参数
     def layer_optimize(self,py,y,
                        learn_rate,# 学习速率
-                       mask_value=0
+                       mask_value=0,
+                       err_weight=1.0
                        ):
         b1 = self.values['b1'];
         w1 = self.values['w1'];
@@ -82,7 +83,7 @@ class BPAutoEncoder:
         
         origin_w2 = w2.copy();
         # 输出层的调整
-        gjs = (py-y)*self.defunc2(py);# 输出层中的梯度
+        gjs = err_weight*(py-y)*self.defunc2(py);# 输出层中的梯度
         tmp = gjs*lr;
         b2 = b2 - tmp; # 调整b2
         
@@ -115,7 +116,7 @@ class BPAutoEncoder:
         self.values['w1']=w1;
                         
 
-    def train(self,X,learn_param,repeat,save_path=None,mask_value=0):
+    def train(self,X,learn_param,repeat,save_path=None,mask_value=0,weight_list=None):
         '''
         注意输入X为一个矩阵(batch,x_size)
         '''
@@ -140,8 +141,10 @@ class BPAutoEncoder:
 
                 
                 mae,rmse=self.evel(py, x,mask_value);
-                
-                self.layer_optimize(py,x,learn_rate=lr);
+                err_weight=1.0;
+                if weight_list is not None:
+                    err_weight = weight_list[i];
+                self.layer_optimize(py,x,learn_rate=lr,err_weight=err_weight);
                 maeAll+=mae/shape1;
                 rmseAll+=rmse/shape1;
 #             print(py);

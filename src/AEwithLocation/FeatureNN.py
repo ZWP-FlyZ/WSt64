@@ -88,7 +88,13 @@ class HidNN():
             a = R[i];
             b = R;
             # 计算距离
-            delta=np.subtract(b,a,out=np.zeros_like(R),where=a!=NoneValue);
+
+            alog = a!=NoneValue;
+            blog = b!=NoneValue;
+            delta=np.subtract(b,a,out=np.zeros_like(R),where=(alog & blog));
+
+#             delta=np.subtract(b,a,out=np.zeros_like(R),where=(alog));
+            
             W[i]=np.sqrt(np.sum(delta**2,axis=1));
             
             # 计算互补量
@@ -126,10 +132,52 @@ class HidNN():
         
         args = np.argsort(avg_ot_w)[0:k];
         return tag_c_index[args].tolist();
-        pass;
+
+    def getExtendDataIndex2(self,ori_c_index,tag_c_index,k):
+        '''
+        获取拓展数据
+        ori_c_index 原簇index列表
+        tag_c_index 目标簇index列表
+        ori_c_index与tag_c_index需要互斥
+        k 获取的扩展数量
+        返回扩展数据的index列表shape=[k]
+        '''
+        ori_cluster_w = self.W[ori_c_index,:];
+        ori_cluster_c = self.C[ori_c_index,:];
+        ot_cluster_w = ori_cluster_w[:,tag_c_index];
+        ot_cluster_c = ori_cluster_c[:,tag_c_index];
+        
+        sorted_args = np.argsort(ot_cluster_w,axis=1)[:,0:k];
+        sorted_args=sorted_args.reshape((-1,));
+        p_tmp = np.zeros(len(tag_c_index));
+        for i in sorted_args:
+            p_tmp[i]=p_tmp[i]+1;
+        args = np.argsort(-p_tmp);
+        return tag_c_index[args[0:k]].tolist();    
     
-    
-    
+    def getExtendDataIndex3(self,ori_c_index,tag_c_index,k):
+        '''
+        获取拓展数据
+        ori_c_index 原簇index列表
+        tag_c_index 目标簇index列表
+        ori_c_index与tag_c_index需要互斥
+        k 获取的扩展数量
+        返回扩展数据的index列表shape=[k]
+        '''
+        ori_cluster_w = self.W[ori_c_index,:];
+        ori_cluster_c = self.C[ori_c_index,:];
+        ot_cluster_w = ori_cluster_w[:,tag_c_index];
+        ot_cluster_c = ori_cluster_c[:,tag_c_index];
+        
+        sorted_args = np.argsort(ot_cluster_w,axis=1)[:,0:k];
+        sorted_args=sorted_args.reshape((-1,));
+        p_tmp = np.zeros(len(tag_c_index));
+        cot=0;
+        for i in sorted_args:
+            p_tmp[i]=p_tmp[i]+1.0/(2+cot%k);
+            cot+=1;
+        args = np.argsort(-p_tmp);
+        return tag_c_index[args[0:k]].tolist();    
     
     
     def get_cache_name(self,p_name):

@@ -30,7 +30,7 @@ class LocAutoEncoder(object):
     other为所有反类总和，other2为所有正类总和
     '''
     loc_aes = {p_all_name:[[]],n_all_name:[[]],all_name:[[]]};
-    loc_aes_ext = {p_all_name:[[]],n_all_name:[[]],all_name:[[]]};
+    loc_aes_ext = {p_all_name:[],n_all_name:[],all_name:[]};
 
     # 原始数据集R
     R=None;
@@ -89,15 +89,20 @@ class LocAutoEncoder(object):
             v.append(BPAutoEncoder(*param_vec));
         pass;
 
-    def train_one(self,loc_name,learn_param,repeat,save_path=None,mask_value=0):
+    def train_one(self,loc_name,learn_param,repeat,save_path=None,mask_value=0,with_weight=False):
         ind = self.getIndexByLocNameWithExt(loc_name);
+        if with_weight:
+            wlist = self.getWeightByLocNameWithExt(loc_name);
         encoder = self.loc_aes[loc_name][1];
         X = self.R;
         if not self.isUAE:
             X = self.R.T
         X = X[ind,:];
         print('\n-->训练 %s 的模型开始'%(loc_name));
-        encoder.train(X,learn_param, repeat,None,mask_value);
+        if with_weight:
+            encoder.train(X,learn_param, repeat,None,mask_value,wlist);
+        else:
+            encoder.train(X,learn_param, repeat,None,mask_value);
         if save_path != None:
             self.saveValue(save_path,[loc_name]);
         print('-->训练 %s 的模型结束\n'%(loc_name));
@@ -110,11 +115,11 @@ class LocAutoEncoder(object):
             self.train_one(locn, learn_param, repeat, save_path, mask_value);
         pass;
     
-    def train_by_names(self,loc_names,learn_param,repeat,save_path=None,mask_value=0):
+    def train_by_names(self,loc_names,learn_param,repeat,save_path=None,mask_value=0,with_weight=False):
         loc_list = loc_names;
         print('训练列表：',loc_list);
         for locn in loc_list:
-            self.train_one(locn, learn_param, repeat, save_path, mask_value);
+            self.train_one(locn, learn_param, repeat, save_path, mask_value,with_weight=with_weight);
         pass;        
     
     def fill(self,loc_name,R):
@@ -131,6 +136,14 @@ class LocAutoEncoder(object):
         index_cp = self.loc_aes[loc_name][0].copy();
         index_cp.extend(ext);
         return index_cp;
+    def getWeightByLocNameWithExt(self,loc_name):
+        ext_len = len(self.loc_aes_ext[loc_name]);
+        ori_len = len(self.loc_aes[loc_name][0]);
+        ori_w = np.ones(ori_len);
+        if ext_len>0:
+            ext_w = 1.0/np.arange(2,ext_len+2);
+            ori_w = np.append(ori_w,ext_w);
+        return ori_w; 
     
     
     def saveValue(self,value_path,name_list=None):
