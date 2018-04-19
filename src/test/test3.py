@@ -31,7 +31,7 @@ print(np.argsort(b));
 
 print(np.repeat(b.reshape((1,5)), 2, axis=0));
 
-tmp = np.argsort(a,axis=1)[:,:2];
+tmp = np.argsort(a)[:,:2]; 
 print(tmp);
 tmp = tmp.reshape((-1,));
 print(tmp)

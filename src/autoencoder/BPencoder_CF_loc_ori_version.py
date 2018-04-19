@@ -25,7 +25,6 @@ import math;
 import os;
 from tools import SysCheck
 
-from autoencoder import BPAE
 from tools.LoadLocation import loadLocation
 
 class BPAutoEncoder:
@@ -204,8 +203,10 @@ def check_none(x):
 def preprocess(R):
     if R is None:
         return R;
-    ind = np.where(R<0);
-    R[ind]=0;
+    for i in range(R.shape[0]):
+        for j in range(R.shape[1]):
+            if R[i,j]<0.0:
+                R[i,j] = 0.0;
     #return  (R -  mean) / ek;
     return  R / 20.0; 
 
@@ -269,16 +270,15 @@ NoneValue = 0.0;
 
 # autoencoder 参数
 hidden_node = 150;
-learn_rate=0.09;
-learn_param = [learn_rate,100,0.99];
-repeat = 500;
+learn_rate=0.06;
+repeat = 100;
 rou=0.1
 
 # 协同过滤参数
-k = 10;
+k = 20;
 loc_w= 1.0;
 
-test_spa=1;
+test_spa=10;
 # 相似列表，shape=(axis0,k),从大到小
 S = None;
 R = None;
@@ -290,11 +290,11 @@ W = np.full((axis0,axis0), 0, float);
     
 
 def encoder_run(spa):
-    train_data = base_path+'/Dataset/ws/train_n/sparseness%d/training%d.txt'%(spa,case);
-    test_data = base_path+'/Dataset/ws/test_n/sparseness%d/test%d.txt'%(spa,case);
+    train_data = base_path+'/Dataset/ws/train/sparseness%d/training%d.txt'%(spa,case);
+    test_data = base_path+'/Dataset/ws/test/sparseness%d/test%d.txt'%(spa,case);
     W_path = base_path+'/Dataset/ws/BP_CF_W_spa%d_t%d.txt'%(spa,case);
     loc_path = base_path+'/Dataset/ws';   
-    values_path=base_path+'/Dataset/ae_values_space/spa%d'%(spa);
+    values_path=base_path+'/Dataset/ae_values2/spa%d'%(spa);
     
     print('开始实验，稀疏度=%d,case=%d'%(spa,case));
     print ('加载训练数据开始');
@@ -335,15 +335,15 @@ def encoder_run(spa):
     tx = us_shape[0];
     if isUserAutoEncoder:
         tx = us_shape[1];
-    encoder = BPAE.BPAutoEncoder(tx,hidden_node,
+    encoder = BPAutoEncoder(tx,hidden_node,
                             actfunc1,deactfunc1,
                              actfunc1,deactfunc1,check_none);
-    if not isUserAutoEncoder:
+    if isUserAutoEncoder:
         R = R.T;
     if loadvalues and encoder.exisValues(values_path):
         encoder.preloadValues(values_path);
     if continue_train:
-        encoder.train(R, learn_param, repeat,None);
+        encoder.train(R, learn_rate, repeat,None);
         encoder.saveValues(values_path);
     PR = encoder.calFill(R);
     print(R);
@@ -353,12 +353,16 @@ def encoder_run(spa):
 ############# PR 还原处理   ###############
     PR = PR * 20.0;
     R = R * 20;
-    PR = np.where(R!=NoneValue,R,PR);
+    for i in range(PR.shape[0]):
+        for j in range(PR.shape[1]):
+            if R[i,j]!=NoneValue:
+                PR[i,j]=R[i,j];
     print(PR);
-    if not isUserAutoEncoder:
-        PR = PR.T;
-        R = R.T;    
+    
 ############# PR 还原处理   ###############        
+    if isUserAutoEncoder:
+        PR = PR.T;
+        R = R.T;
     print ('训练模型开始结束，耗时 %.2f秒  \n'%((time.time() - tnow)));  
 
 

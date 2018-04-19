@@ -123,9 +123,9 @@ test_spa=20;
 # 协同过滤参数
 k = 13;
 
-oeg = 100;
-name_extend_data=['p_all'];
-k_extend_data=[0];
+oeg = 40;
+name_extend_data=['United States'];
+k_extend_data=[41];
 
 name_list_train=['p_all'];
 name_list_pr=['p_all','all'];
@@ -210,147 +210,21 @@ def encoder_run(spa):
 #     print(ex);
     print ('FNN结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
     
-#     print ('选取特定地域数据开始');
-#     tnow = time.time();
-#     lae = LocBPAE.LocAutoEncoder(lp,40,R,hidden_node,
-#                                  [actfunc1,deactfunc1,
-#                                    actfunc1,deactfunc1],isUserAutoEncoder);
-#     
-#     loc_name = None;
-#     loc_index = lae.loc_aes[loc_name][0];
-#     loc_index = np.array(loc_index)-1;
-#     if isUserAutoEncoder:
-#         R = R[loc_index,:];
-#     else:
-#         R = R[:,loc_index];    
-#     print ('选取特定地域数据结束，耗时 %.2f秒  \n'%((time.time() - tnow)));    
+    us_index = lae.getIndexByLocName('United States');
+    ger_index = lae.getIndexByLocName('Germany');
+    
+    US = R[us_index,:];
+    GER = R[ger_index,:];
+    
+    print(US);
+    print(GER);
     
     
     
     
-    print ('训练模型开始');
-    tnow = time.time();
     
-    if not isUserAutoEncoder:
-        R = R.T;
-    if loadvalues and lae.exitValue(values_path,name_list_train):
-        lae.loadValue(values_path,name_list_train);
-    if continue_train:
-        lae.train_by_names(name_list_train,learn_param,repeat,values_path,with_weight=False);
-        
-        # lae.saveValues(values_path);
-
-    lae.loadValue(values_path,name_list_pr);
-    PR = np.zeros_like(R);
-
-    for i in range(len(name_list_pr)-1,-1,-1):
-        n = name_list_pr[i];
-        nind = lae.getIndexByLocName(n);
-        tPR = lae.fill(n,R[nind,:]);
-        PR[nind,:]=tPR;
-    if not isUserAutoEncoder:
-        R = R.T;
-        PR = PR.T;
-    
-    print(R);
-    print();
-    print(PR);
-    print();
-############# PR 还原处理   ###############
-    PR = PR * 20.0;
-    R = R * 20.0;
-#     for i in range(PR.shape[0]):
-#         for j in range(PR.shape[1]):
-#             if R[i,j]!=NoneValue:
-#                 PR[i,j]=R[i,j];
-    PR = np.where(R!=NoneValue,R,PR);
-    print(PR);
-    
-############# PR 还原处理   ###############        
-#     if isUserAutoEncoder:
-#         PR = PR.T;
-    print ('训练模型开始结束，耗时 %.2f秒  \n'%((time.time() - tnow)));  
-
-
-    print ('加载测试数据开始');
-    tnow = time.time();
-    trdata = np.loadtxt(test_data, dtype=float);
-    n = np.alen(trdata);
-    print ('加载测试数据完成，耗时 %.2f秒，数据总条数%d  \n'%((time.time() - tnow),n));
-
-    print ('评测开始');
-    tnow = time.time();
-    tmp_vect=[];
-    lp_vect=[];
-    for n in name_list_pr:
-        tmp_vect.append([lae.getIndexByLocName(n),
-                         0.0,# mae
-                         0.0,# rmse
-                         0]);# 
-    for n in lae.loc_aes:
-        lp_vect.append([lae.getIndexByLocName(n),
-                         0.0,# mae
-                         0.0,# rmse
-                         0,n]);#
-                             
-    mae=0.0;rmse=0.0;cot=0;
-    for tc in trdata:
-        uid = int(tc[0]);
-        sid = int(tc[1]);
-        if tc[2]<=0:
-            continue;                    
-        rt = PR[uid,sid];
-        tm = abs(rt-tc[2]);
-        trm =  (rt-tc[2])**2;
-        mae+=tm;
-        rmse+=trm;
-        cot+=1;
-        
-        if isUserAutoEncoder:
-            tagind = uid;
-        else:
-            tagind = sid;
-        for v in tmp_vect:
-            if tagind not in v[0]:
-                continue;
-            v[1]+=tm;
-            v[2]+=trm;
-            v[3]+=1;
-            
-        for v in lp_vect:
-            if tagind not in v[0]:
-                continue;
-            v[1]+=tm;
-            v[2]+=trm;
-            v[3]+=1;        
-        
-        
-    for v in tmp_vect:
-        if v[3] == 0:
-            continue;
-        print('pr_bef->\t',v[1]);
-        v[1] = v[1] / v[3];
-        v[2] = np.sqrt(v[2]/v[3]);
-    for i in range(len(name_list_pr)):
-        print('pr->\t'+name_list_pr[i]+':\t',tmp_vect[i][1:]);
-    
-    print();
-        
-    for v in lp_vect:
-        if v[3] == 0:
-            continue;
-        print('lp_bef->\t\t',v[4],':\t\t',v[1]);
-        v[1] = v[1] / v[3];
-        v[2] = np.sqrt(v[2]/v[3]);
-    for i in range(len(lp_vect)):
-        print('lp->:\t\t',lp_vect[i][1:]);        
-        
-        
-    mae = mae * 1.0 / cot;
-    rmse= np.sqrt(rmse/cot);
-    print ('评测完成，耗时 %.2f秒\n'%((time.time() - tnow)));    
-    
-
+    mae=0.0;
+    rmse=0.0;
     print('实验结束，总耗时 %.2f秒,稀疏度=%d,MAE=%.6f,RMSE=%.6f\n'%((time.time()-now),spa,mae,rmse));
 
 

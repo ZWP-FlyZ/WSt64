@@ -91,9 +91,9 @@ class HidNN():
 
             alog = a!=NoneValue;
             blog = b!=NoneValue;
-            delta=np.subtract(b,a,out=np.zeros_like(R),where=(alog & blog));
-
-#             delta=np.subtract(b,a,out=np.zeros_like(R),where=(alog));
+#             delta=np.subtract(b,a,out=np.zeros_like(R),where=(alog | blog));
+#             delta=np.subtract(b,a,out=np.zeros_like(R),where=(alog & blog));
+            delta=np.subtract(b,a,out=np.zeros_like(R),where=(alog));
             
             W[i]=np.sqrt(np.sum(delta**2,axis=1));
             
