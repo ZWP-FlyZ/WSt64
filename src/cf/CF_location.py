@@ -53,13 +53,13 @@ loc_tab=None;
 
 sumS=np.zeros(axis0,float);# 平均向量
 
-spas = [5,10,15,20] #稀疏度
-
+spas = [25,30] #稀疏度
 case = 1;# 训练与测试例
+
 k=100; #
 p = 2 #
 
-loc_w = 5;
+loc_w = 1;
 
 
 # 根据W和S预测出u,s的值,
@@ -86,12 +86,14 @@ def predict(u,s):
         return sum/cot;
     else:
         return 0.2;
-    
+
+
+
 def run_cf(spa):
     global R,W,S,sumS,loc_tab;
     
-    train_data = base_path+'/Dataset/ws/train/sparseness%d/training%d.txt'%(spa,case);
-    test_data = base_path+'/Dataset/ws/test/sparseness%d/test%d.txt'%(spa,case);
+    train_data = base_path+'/Dataset/ws/train_n/sparseness%d/training%d.txt'%(spa,case);
+    test_data = base_path+'/Dataset/ws/test_n/sparseness%d/test%d.txt'%(spa,case);
     W_path = base_path+'/Dataset/ws/BP_CF_W_spa%d_t%d.txt'%(spa,case);
     loc_path = base_path+'/Dataset/ws';
     
@@ -123,9 +125,9 @@ def run_cf(spa):
     R[u,s]=trdata[:,2];
     if isICF:
         R = R.T;
-    # mean = np.mean(R,1);
     del trdata,u,s;
     print ('转换数据到矩阵结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
+
 
     print ('计算相似度矩阵开始');
     tnow = time.time();
@@ -133,22 +135,22 @@ def run_cf(spa):
     if readWcache and os.path.exists(W_path):
         W = np.loadtxt(W_path, np.float128);
     else:
-        for i in range(axis0-1):
+        for i in range(axis0):
             if i%50 ==0:
                 print('----->step%d'%(i))
-            for j in range(i+1,axis0):
-                ws = 0.0;
-                cot = 0;
-                for c in range(axis1):
-                    if R[i,c]!=NoneValue and R[j,c]!=NoneValue:
-                        ws += abs(R[i,c]-R[j,c])**p;
-                        cot+=1;
-                if cot!= 0:
-                    # origin W[i,j]=W[j,i]=1.0/(ws ** (1.0/p)+1.0);
-                    # W[i,j]=W[j,i]=1.0/( ((ws/cot) ** (1.0/p))+1.0);
-                    # W[i,j]=W[j,i]= 1.0/math.exp((ws/cot) ** (1.0/p));
-                    W[i,j]=W[j,i]= 1.0/math.exp((ws) ** (1.0/p));
-                    # W[i,j]=W[j,i]= 1.0/math.exp(((ws) ** (1.0/p))/cot);
+            for j in range(axis0):
+                a = R[i,:];
+                b = R[j,:];
+                alog = a!=NoneValue;
+                blog = b!=NoneValue;
+                delta = np.subtract(a,b,out=np.zeros_like(a),where=alog&blog); 
+                ws = np.sum(delta**2);
+                W[i,j]= 1.0/math.exp(np.sqrt(ws));
+        
+        for i in range(axis0):
+            W[i,i]=0;
+                
+       
         np.savetxt(W_path,W,'%.30f');                
     print ('计算相似度矩阵结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
 
@@ -160,6 +162,7 @@ def run_cf(spa):
         sumS[i] = np.sum(W[i,S[i]]);            
     print ('生成相似列表开始结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
 
+    
     print ('加载测试数据开始');
     tnow = time.time();
     trdata = np.loadtxt(test_data, dtype=float);
@@ -170,7 +173,7 @@ def run_cf(spa):
     tnow = time.time();
     mae=0.0;rmse=0.0;cot=0;
     for tc in trdata:
-        if tc[2]<0:
+        if tc[2]<=0:
             continue;
         rt = predict(int(tc[0]),int(tc[1]));
         mae+=abs(rt-tc[2]);
@@ -187,7 +190,7 @@ def run_cf(spa):
     print(W);
     print(S);    
 if __name__ == '__main__':
-#     for spa in spas:
-#         run_cf(spa);
-    run_cf(5);
+    for spa in spas:
+        run_cf(spa);
+
     pass

@@ -21,155 +21,8 @@ import math;
 import os;
 from tools import SysCheck
 
-
-
-class BPAutoEncoder:
-    
-    def __init__(self,X_n,hidden_n,actfun1,deactfun1,actfun2,deactfun2,check_none):
-        self.size_x = X_n;
-        self.size_hidden=hidden_n;
-        self.func1 = actfun1;
-        self.defunc1 =deactfun1;
-        self.func2 = actfun2;
-        self.defunc2 =deactfun2;
-        self.check_none= check_none;
-        self.values= {
-            'w1':np.random.normal(0,rou,(self.size_x,self.size_hidden))/np.sqrt(hidden_n),
-            'w2':np.random.normal(0,rou,(self.size_hidden,self.size_x))/np.sqrt(hidden_n),
-            'b1':np.random.normal(0,rou,(1,self.size_hidden))/np.sqrt(hidden_n),
-            'b2':np.random.normal(0,rou,(1,self.size_x))/np.sqrt(hidden_n),
-            'h':None
-            };
-    
-    ## 注意这里计算过方法必须保证NoneValue=0
-    def calculate(self,x):
-        x = np.reshape(x, (1,self.size_x));
-        h = self.func1(np.matmul(x,self.values['w1'])+self.values['b1']);
-        self.values['h']=h.reshape(self.size_hidden);
-        y = self.func2(np.matmul(h,self.values['w2'])+self.values['b2']);
-        return y.reshape(self.size_x,);
-
-    def calFill(self,R):
-        PR = np.zeros(R.shape,float);
-        for j in range(R.shape[1]):
-            py = self.calculate(R[:,j]);
-            PR[:,j] = py;
-        return PR;
-
-    
-    def evel(self,py,y):
-        mae=0.0;rmse=0.0;
-        cot=0;
-        for i in range(self.size_x):
-            if self.check_none(y[i]):
-                continue;
-            cot+=1;
-            delta=abs(y[i]-py[i]);
-            mae+=delta;
-            rmse+=delta**2;
-        if cot==0:
-            return (-1,-1);
-        else:
-            return (mae/cot,math.sqrt(rmse/cot));
-    
-    # 更新参数
-    def layer_optimize(self,py,y):
-        b1 = self.values['b1'];
-        w1 = self.values['w1'];
-        b2 = self.values['b2'];
-        w2 = self.values['w2'];
-        h  = self.values['h'];
-        lr = self.lr;
-        ori_w2 = w2.copy();
-        gjs=np.zeros(self.size_x);
-        for j in range(self.size_x):
-            if self.check_none(y[j]):
-                continue;
-            k = py[j];
-            gj=(k-y[j])*self.defunc2(k);
-            gjs[j]=gj;
-            k = lr*gj;
-            b2[0,j]=b2[0,j]-k;
-            w2[:,j]=w2[:,j]-k*h;
-
-        gis = np.zeros(self.size_hidden);
-        for i in range(self.size_hidden):
-            k=np.sum(gjs*w2[i,:]);
-            k=self.defunc1(h[i])*k;
-            b1[0,i]=b1[0,i]-lr*k;
-            gis[i]=k;
-            
-        tmp =lr*gis;
-        for k in range(self.size_x):
-            if self.check_none(y[k]):
-                continue;
-            w1[k,:]=w1[k,:]-tmp*y[k];            
-            
-        self.values['b2']=b2;
-        self.values['w2']=w2;        
-        self.values['b1']=b1;
-        self.values['w1']=w1;
-                        
-
-    def train(self,X,learn_rate,repeat,save_path=None):
-        self.lr=learn_rate;
-        X = X.T;
-        print('-->训练开始，learn_rate=%f,repeat=%d \n'%(learn_rate,repeat));
-        now = time.time();
-        for rep in range(repeat):
-            tnow=time.time();
-            #self.lr=self.lr*0.95;
-            maeAll=0.0;rmseAll=0.0;
-            shape1=X.shape[0];
-            for i in range(shape1):
-                x = X[i];
-                py = self.calculate(x);
-                mae,rmse=self.evel(py, x);
-                self.layer_optimize(py,x);
-                maeAll+=mae/shape1;
-                rmseAll+=rmse/shape1;
-#             print(py);
-            if save_path != None:
-                self.saveValues(save_path);
-            print('---->step%d 耗时%.2f秒 MAE=%.6f RMSE=%.6f'%(rep+1,(time.time()-tnow),maeAll,rmseAll));
-        print('\n-->训练结束，总耗时%.2f秒  learn_rate=%.3f,repeat=%d \n'%((time.time()-now),learn_rate,repeat));
- 
-        
-    def preloadValues(self,path,isUAE=True):
-        if os.path.exists(path+'/w1_%s.txt'%(isUAE)):
-            self.values['w1']=np.loadtxt(path+'/w1_%s.txt'%(isUAE), np.float64);
-        if os.path.exists(path+'/w2_%s.txt'%(isUAE)):
-            self.values['w2']=np.loadtxt(path+'/w2_%s.txt'%(isUAE), np.float64);        
-        if os.path.exists(path+'/b1_%s.txt'%(isUAE)):
-            self.values['b1']=np.loadtxt(path+'/b1_%s.txt'%(isUAE), np.float64).reshape(1,self.size_hidden);        
-        if os.path.exists(path+'/b2_%s.txt'%(isUAE)):
-            self.values['b2']=np.loadtxt(path+'/b2_%s.txt'%(isUAE), np.float64).reshape(1,self.size_x);
-        if os.path.exists(path+'/h_%s.txt'%(isUAE)):
-            self.values['h']=np.loadtxt(path+'/h_%s.txt'%(isUAE), np.float64);            
-    def saveValues(self,path,isUAE=True):
-        np.savetxt(path+'/w1_%s.txt'%(isUAE),self.values['w1'],'%.12f');
-        np.savetxt(path+'/w2_%s.txt'%(isUAE),self.values['w2'],'%.12f');
-        np.savetxt(path+'/b1_%s.txt'%(isUAE),self.values['b1'],'%.12f');
-        np.savetxt(path+'/b2_%s.txt'%(isUAE),self.values['b2'],'%.12f');
-        np.savetxt(path+'/h_%s.txt'%(isUAE),self.values['h'],'%.12f');    
-    def exisValues(self,path,isUAE=True):
-        if not os.path.exists(path+'/w1_%s.txt'%(isUAE)):
-            return False;
-        if not os.path.exists(path+'/w2_%s.txt'%(isUAE)):
-            return False;        
-        if not os.path.exists(path+'/b1_%s.txt'%(isUAE)):
-            return False;      
-        if not os.path.exists(path+'/b2_%s.txt'%(isUAE)):
-            return False;
-        if not os.path.exists(path+'/h_%s.txt'%(isUAE)):
-            return False;        
-        return True;
-    def getValues(self):
-        return self.values;    
-   
-############################ end class ###########################    
-    
-
+from autoencoder import BPAE
+from tools.LoadLocation import loadLocation
 
 
 def actfunc1(x):
@@ -199,16 +52,15 @@ def check_none(x):
 def preprocess(R):
     if R is None:
         return R;
-    for i in range(R.shape[0]):
-        for j in range(R.shape[1]):
-            if R[i,j]<0.0:
-                R[i,j] = 0.0;
+    ind = np.where(R<0);
+    R[ind]=0;
     #return  (R -  mean) / ek;
     return  R / 20.0; 
 
 
 # CF预测函数 根据W和S预测出u,s的值,
 def predict(u,s,R,W,S):
+    global loc_tab;
     a0 = u;
     a1 = s;
     if isICF:
@@ -220,8 +72,12 @@ def predict(u,s,R,W,S):
             break;
         if R[item,a1] ==NoneValue:
             continue;
-        sum+= W[a0,item]*R[item,a1];
-        cot+=W[a0,item];
+        rw = (W[a0,item]);            
+        if loc_tab[a0]==loc_tab[item]:
+            rw *=loc_w;
+        
+        sum+= rw*R[item,a1];
+        cot+=rw;
     if cot != 0:
         return sum/cot;
     else:
@@ -241,8 +97,8 @@ isUserAutoEncoder=True;
 isICF=False;
 
 # 加载AutoEncoder
-loadvalues= False;
-continue_train = True;
+loadvalues= True;
+continue_train = False;
 # 加载相似度矩阵
 readWcache=False;
 
@@ -261,27 +117,32 @@ NoneValue = 0.0;
 
 # autoencoder 参数
 hidden_node = 150;
-learn_rate=0.085;
-repeat = 600;
+learn_rate=0.09;
+learn_param = [learn_rate,100,0.99];
+repeat = 500;
 rou=0.1
-test_spa=20;
+
 # 协同过滤参数
-k = 13;
+k = 10;
+loc_w= 1.0;
 
-
+test_spa=20;
 # 相似列表，shape=(axis0,k),从大到小
 S = None;
 R = None;
+
+loc_tab=None;
+
 # 相识度矩阵
 W = np.full((axis0,axis0), 0, float);
     
 
 def encoder_run(spa):
-    train_data = base_path+'/Dataset/ws/train/sparseness%d/training%d.txt'%(spa,case);
-    test_data = base_path+'/Dataset/ws/test/sparseness%d/test%d.txt'%(spa,case);
+    train_data = base_path+'/Dataset/ws/train_n/sparseness%d/training%d.txt'%(spa,case);
+    test_data = base_path+'/Dataset/ws/test_n/sparseness%d/test%d.txt'%(spa,case);
     W_path = base_path+'/Dataset/ws/BP_CF_W_spa%d_t%d.txt'%(spa,case);
-       
-    values_path=base_path+'/Dataset/ae_values/spa%d'%(spa);
+    loc_path = base_path+'/Dataset/ws';   
+    values_path=base_path+'/Dataset/ae_values_space/spa%d'%(spa);
     
     print('开始实验，稀疏度=%d,case=%d'%(spa,case));
     print ('加载训练数据开始');
@@ -304,7 +165,17 @@ def encoder_run(spa):
     print ('预处理数据开始');
     tnow = time.time();
     R=preprocess(R);
-    print ('预处理数据结束，耗时 %.2f秒  \n'%((time.time() - tnow)));    
+    print ('预处理数据结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
+        
+    print ('加载地理位置信息开始');
+    tnow = time.time();
+    if isICF:
+        loc_path+='/ws_info.txt';
+    else:
+        loc_path+='/user_info.txt';
+    global loc_tab;        
+    loc_tab = loadLocation(loc_path);
+    print ('加载地理位置信息完成，耗时 %.2f秒，数据总条数%d  \n'%((time.time() - tnow),len(loc_tab)));    
     
     
     print ('训练模型开始');
@@ -312,15 +183,15 @@ def encoder_run(spa):
     tx = us_shape[0];
     if isUserAutoEncoder:
         tx = us_shape[1];
-    encoder = BPAutoEncoder(tx,hidden_node,
+    encoder = BPAE.BPAutoEncoder(tx,hidden_node,
                             actfunc1,deactfunc1,
                              actfunc1,deactfunc1,check_none);
-    if isUserAutoEncoder:
+    if not isUserAutoEncoder:
         R = R.T;
     if loadvalues and encoder.exisValues(values_path):
         encoder.preloadValues(values_path);
     if continue_train:
-        encoder.train(R, learn_rate, repeat,values_path);
+        encoder.train(R, learn_param, repeat,None);
         encoder.saveValues(values_path);
     PR = encoder.calFill(R);
     print(R);
@@ -329,18 +200,14 @@ def encoder_run(spa):
     print();
 ############# PR 还原处理   ###############
     PR = PR * 20.0;
-    R = R * 20.0;
-    for i in range(PR.shape[0]):
-        for j in range(PR.shape[1]):
-            if R[i,j]!=NoneValue:
-                PR[i,j]=R[i,j];
+    R = R * 20;
+    PR = np.where(R!=NoneValue,R,PR);
     print(PR);
-    
-############# PR 还原处理   ###############        
-    if isUserAutoEncoder:
+    if not isUserAutoEncoder:
         PR = PR.T;
-    print ('训练模型开始结束，耗时 %.2f秒  \n'%((time.time() - tnow)));  
-
+        R = R.T;    
+############# PR 还原处理   ###############        
+    print ('训练模型开始结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
 
     print ('加载测试数据开始');
     tnow = time.time();
@@ -369,5 +236,7 @@ def encoder_run(spa):
     print(S)
         
 if __name__ == '__main__':
-    encoder_run(test_spa);
+    spas = [1,2,3,4,5,10,15,20,25,30];
+    for spa in spas:
+        encoder_run(spa);
     pass
