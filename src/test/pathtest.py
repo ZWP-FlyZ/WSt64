@@ -6,6 +6,16 @@ Created on 2018年3月23日
 '''
 
 import os;
+import numpy as np;
+
+def removeNoneValue(R):
+    '''
+    清除无效的数据
+    '''
+    if R is None:
+        return R;
+    ind = np.where(R<0);
+    R[ind]=0;
 
 
 if __name__ == '__main__':
@@ -25,5 +35,17 @@ if __name__ == '__main__':
          [[2,1,1],2.0,2.2,0],
          [[3,1,1],3.0,3.3,0]]    
         
-    print(c[0][1:]);    
+    print(c[0][1:]);
+    
+    for i in range(10):
+        print(np.random.randint(0,10,10));
+    
+    a = np.array([[1,2,3],[0,1,2]]);
+    a[[0,1],[1]*2]=[-1,-2];
+    print(a);
+    removeNoneValue(a);
+    print(a);
+    
+    
+        
     pass

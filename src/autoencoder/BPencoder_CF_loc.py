@@ -24,6 +24,7 @@ import time;
 import math;
 import os;
 from tools import SysCheck
+from autoencoder import Preprocess;
 
 from autoencoder import BPAE
 from tools.LoadLocation import loadLocation
@@ -101,8 +102,8 @@ isUserAutoEncoder=True;
 isICF=False;
 
 # 加载AutoEncoder
-loadvalues= True;
-continue_train = False;
+loadvalues= False;
+continue_train = True;
 # 加载相似度矩阵
 readWcache=False;
 
@@ -168,7 +169,12 @@ def encoder_run(spa):
     
     print ('预处理数据开始');
     tnow = time.time();
-    R=preprocess(R);
+    Preprocess.removeNoneValue(R);
+    oriR = R.copy();
+    Preprocess.preprocess1(R);
+    print(np.sum(R-oriR));
+    R/=20.0;
+    oriR/=20.0;
     print ('预处理数据结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
         
     print ('加载地理位置信息开始');
@@ -197,6 +203,8 @@ def encoder_run(spa):
     if continue_train:
         encoder.train(R, learn_param, repeat,None);
         encoder.saveValues(values_path);
+    
+    R = oriR;
     PR = encoder.calFill(R);
     print(R);
     print();
@@ -277,7 +285,7 @@ def encoder_run(spa):
     # print(S)
         
 if __name__ == '__main__':
-    spas = [1,2,3,4,5,10,15,20,25,30];
+    spas = [1,2,3,4,5,10,15,20];
     for spa in spas:
         encoder_run(spa);
     pass
