@@ -7,7 +7,7 @@ Created on 2018年2月1日
 
 '''
 将矩阵分解和基准线预测结合
-
+https://www.cnblogs.com/Xnice/p/4522671.html
 '''
 
 import numpy as np;
@@ -143,26 +143,26 @@ NoneValue= 0;
 # 初始化参数中 正态分布标准差
 rou = 0.1;
 # 在矩阵分解中 正则化 参数
-lamda = 0.02;
+lamda = 0.001;
 
 # 隐属性数
-f = 100;
+f = 150;
 
 #训练次数
-repeat = 30;
+repeat = 100;
 
 # 学习速率
-learn_rate = 0.009;
+learn_rate = 0.010;
 
 
 us_shape=(339,5825);
-case = 8;
+case = 1;
 loadvalues=False;
 continue_train=True;
 
 def mf_base_run(spa,case):
-    train_data = base_path+'/Dataset/ws/train/sparseness%d/training%d.txt'%(spa,case);
-    test_data = base_path+'/Dataset/ws/test/sparseness%d/test%d.txt'%(spa,case);
+    train_data = base_path+'/Dataset/ws/train_n/sparseness%d/training%d.txt'%(spa,case);
+    test_data = base_path+'/Dataset/ws/test_n/sparseness%d/test%d.txt'%(spa,case);
        
     values_path=base_path+'/Dataset/mf_baseline_values/spa%d'%(spa);
     
@@ -230,6 +230,6 @@ def mf_base_run(spa,case):
 
 
 if __name__ == '__main__':
-    mf_base_run(5,case)
+    mf_base_run(10,case)
     
     pass

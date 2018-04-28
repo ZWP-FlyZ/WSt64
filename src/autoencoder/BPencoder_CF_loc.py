@@ -102,8 +102,8 @@ isUserAutoEncoder=True;
 isICF=False;
 
 # 加载AutoEncoder
-loadvalues= False;
-continue_train = True;
+loadvalues= True;
+continue_train = False;
 # 加载相似度矩阵
 readWcache=False;
 
