@@ -16,7 +16,7 @@ import math;
 import os;
 from tools import SysCheck;
 
-import MFS;
+from mf import MFS;
     
 def preprocess(R):
     if R is None:
@@ -38,22 +38,22 @@ NoneValue= 0;
 # 初始化参数中 正态分布标准差
 rou = 0.1;
 # 在矩阵分解中 正则化 参数
-lamda = 0.02;
+lamda = 0.06;
 
 # 隐属性数
-f = 100;
+f = 64;
 
 #训练次数
-repeat = 50;
+repeat = 100;
 
 # 学习速率
-learn_rate = 0.010;
+learn_rate = 0.03;
 
 
 us_shape=(339,5825);
 case = 1;
-loadvalues=False;
-continue_train=True;
+loadvalues=True;
+continue_train=False;
 
 def mf_base_run(spa,case):
     train_data = base_path+'/Dataset/ws/train_n/sparseness%d/training%d.txt'%(spa,case);
@@ -125,6 +125,6 @@ def mf_base_run(spa,case):
 
 
 if __name__ == '__main__':
-    mf_base_run(10,case)
+    mf_base_run(1,case)
     
     pass

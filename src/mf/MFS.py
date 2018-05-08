@@ -92,6 +92,8 @@ class MF_bl:
             self.values['bi']=np.loadtxt(path+'/bi.txt', float);
            
     def saveValues(self,path):
+        if not os.path.isdir(path):
+            os.mkdir(path);
         np.savetxt(path+'/P.txt',self.values['P'],'%.6f');
         np.savetxt(path+'/Q.txt',self.values['Q'],'%.6f');
         np.savetxt(path+'/bu.txt',self.values['bu'],'%.6f');

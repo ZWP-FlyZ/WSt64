@@ -10,7 +10,7 @@ Created on 2018年4月27日
 '''
 
 import numpy as np;
-
+from mf.MFS import MF_bl as mf;
 
 def removeNoneValue(R):
     '''
@@ -91,6 +91,34 @@ def preprocess2(R,isUAE = True,mr_mut=2):
 
     if not isUAE:
         R = R.T;
+
+def preprocessMF(R,mf,isUAE = True,mr_mut=2):
+    '''
+    由矩阵分解提供填补值
+    '''
+    ind = np.where(R>0);
+    newR = np.zeros_like(R);
+    newR[ind]=1;
+    if isUAE:
+        sum_arr = np.sum(newR,axis=0);
+    else:
+        sum_arr = np.sum(newR,axis=1);
+        R = R.T;
+        
+    batch_size = R.shape[0];    
+    most = int(np.median(sum_arr));
+    feat_ind = np.where(sum_arr==0)[0];
+    for fid in feat_ind:
+        batch_ind = np.random.randint(0,batch_size,size=most);
+        for bid in batch_ind:
+            if isUAE:
+                R[bid,fid]=mf.predict(bid, fid);
+            else:
+                R[bid,fid]=mf.predict(fid,bid);
+    if not isUAE:
+        R = R.T;    
+    pass;
+
 
 
 

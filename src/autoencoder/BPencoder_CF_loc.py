@@ -28,7 +28,7 @@ from autoencoder import Preprocess;
 
 from autoencoder import BPAE
 from tools.LoadLocation import loadLocation
-
+from mf.MFS import MF_bl;
 
 def actfunc1(x):
     return 1.0/( 1.0 + np.exp(np.array(-x,np.float64)));
@@ -121,7 +121,7 @@ case = 1;
 NoneValue = 0.0;
 
 # autoencoder 参数
-hidden_node = 50;
+hidden_node = 150;
 learn_rate=0.09;
 learn_param = [learn_rate,100,0.99];
 repeat = 500;
@@ -130,6 +130,8 @@ rou=0.1
 # 协同过滤参数
 k = 20;
 loc_w= 1.0;
+
+f=64;
 
 test_spa=10;
 # 相似列表，shape=(axis0,k),从大到小
@@ -148,6 +150,10 @@ def encoder_run(spa):
     W_path = base_path+'/Dataset/ws/BP_CF_W_spa%d_t%d.txt'%(spa,case);
     loc_path = base_path+'/Dataset/ws';   
     values_path=base_path+'/Dataset/ae_values_space/spa%d'%(spa);
+    
+    mf_values_path=base_path+'/Dataset/mf_baseline_values/spa%d'%(spa);
+    
+    
     
     print('开始实验，稀疏度=%d,case=%d'%(spa,case));
     print ('加载训练数据开始');
@@ -171,6 +177,14 @@ def encoder_run(spa):
     tnow = time.time();
     Preprocess.removeNoneValue(R);
     oriR = R.copy();
+    ############################
+    # 矩阵分解填补预处理
+    mean = np.sum(R)/np.count_nonzero(R);
+    mf = MF_bl(R.shape,f,mean);
+    mf.preloadValues(mf_values_path);
+    
+    
+    ############################
     Preprocess.preprocess(R);
     print(np.sum(R-oriR));
     R/=20.0;
@@ -285,7 +299,7 @@ def encoder_run(spa):
     # print(S)
         
 if __name__ == '__main__':
-    spas = [1,2,3];
+    spas = [1];
     for spa in spas:
         encoder_run(spa);
     pass
