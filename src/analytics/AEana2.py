@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 '''
-Created on 2018年4月27日
+Created on 2018年5月7日
 
-@author: zwp
+@author: zwp12
 '''
 
 import numpy as np;
@@ -77,7 +77,7 @@ W = np.full((axis0,axis0), 0, float);
 fid = 1;
 def setFigure(X,Y,fid):
     plt.figure(fid);
-    plt.scatter(X,Y);
+    plt.plot(X,Y);
     plt.show();
 
 
@@ -112,28 +112,36 @@ def encoder_run(spa):
     tnow = time.time();
     Preprocess.removeNoneValue(R);
     Preprocess.preprocess(R);
-    R=preprocess(R);
     print ('预处理数据结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
 
-    if isUserAutoEncoder:
-        x_list = np.arange(us_shape[1]);
-        sum_list = np.sum(R,axis=0);
-    else:
-        x_list = np.arange(us_shape[0]);
-        sum_list = np.sum(R,axis=1);
+    r_list = np.reshape(R,(-1,));
+    r_list = r_list[np.where(r_list>0)];
+    mean = np.mean(r_list);
+    std = np.std(r_list);
+    print(mean,std);
+    # R = (R-mean)/std;
+    delta = mean/std;
+    step_range=1000;
+    step = 20.0 / step_range;
+    boxes = np.zeros((step_range,),float);
+    for u in range(us_shape[0]):
+        for s in range(us_shape[1]):
+            rt = R[u,s];
+            if rt==0.0:continue;
+            bid = int(rt/step);
+            boxes[bid]+=1;
+    
+    x_list= np.arange(20,step=step);
+    
 
-    print(np.median(sum_list),np.mean(sum_list),np.std(sum_list))
-
-
-
-    setFigure(x_list, sum_list, spa);
+    setFigure(x_list, boxes, spa);
 
     
     
 
 
 if __name__ == '__main__':
-    spas = [1];
+    spas = [15];
     for spa in spas:
         encoder_run(spa);
     pass

@@ -89,7 +89,7 @@ def predict(u,s,R,W,S):
         return 0.2;
 
 
-base_path = r'E:';
+base_path = r'E:/work';
 if SysCheck.check()=='l':
     base_path='/home/zwp/work'
 origin_data = base_path+'/rtdata.txt';
@@ -102,8 +102,8 @@ isUserAutoEncoder=True;
 isICF=False;
 
 # 加载AutoEncoder
-loadvalues= True;
-continue_train = False;
+loadvalues= False;
+continue_train = True;
 # 加载相似度矩阵
 readWcache=False;
 
@@ -121,7 +121,7 @@ case = 1;
 NoneValue = 0.0;
 
 # autoencoder 参数
-hidden_node = 150;
+hidden_node = 50;
 learn_rate=0.09;
 learn_param = [learn_rate,100,0.99];
 repeat = 500;
@@ -171,7 +171,7 @@ def encoder_run(spa):
     tnow = time.time();
     Preprocess.removeNoneValue(R);
     oriR = R.copy();
-    Preprocess.preprocess1(R);
+    Preprocess.preprocess(R);
     print(np.sum(R-oriR));
     R/=20.0;
     oriR/=20.0;
@@ -230,7 +230,7 @@ def encoder_run(spa):
     if isICF:
         R = R.T;
     if readWcache and os.path.exists(W_path):   
-        W = np.loadtxt(W_path, np.float128);
+        W = np.loadtxt(W_path, np.float64);
     else:
         for i in range(axis0-1):
             if i%50 ==0:
@@ -285,7 +285,7 @@ def encoder_run(spa):
     # print(S)
         
 if __name__ == '__main__':
-    spas = [1,2,3,4,5,10,15,20];
+    spas = [1,2,3];
     for spa in spas:
         encoder_run(spa);
     pass

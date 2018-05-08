@@ -29,7 +29,7 @@ def preprocess(R):
     return  mean,Iu_num;
 
 
-base_path = r'E:';
+base_path = r'E:/work';
 if SysCheck.check()=='l':
     base_path='/home/zwp/work'
 origin_data = base_path+'/rtdata.txt';
