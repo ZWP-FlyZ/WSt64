@@ -21,7 +21,7 @@ import math;
 import os;
 from tools import SysCheck
 from autoencoder import Preprocess;
-
+from mf.MFS import MF_bl;
 from autoencoder import BPAE
 from tools.LoadLocation import loadLocation
 
@@ -119,6 +119,9 @@ rou=0.1
 k = 10;
 loc_w= 1.0;
 
+f=100
+cmp_rat=0.1
+
 test_spa=20;
 # 相似列表，shape=(axis0,k),从大到小
 S = None;
@@ -136,7 +139,8 @@ def encoder_run(spa):
     W_path = base_path+'/Dataset/ws/BP_CF_W_spa%d_t%d.txt'%(spa,case);
     loc_path = base_path+'/Dataset/ws';   
     values_path=base_path+'/Dataset/ae_values_space/spa%d'%(spa);
-    
+    mf_values_path=base_path+'/Dataset/mf_baseline_values/spa%d'%(spa);
+        
     print('开始实验，稀疏度=%d,case=%d'%(spa,case));
     print ('加载训练数据开始');
     now = time.time();
@@ -159,7 +163,15 @@ def encoder_run(spa):
     tnow = time.time();
     Preprocess.removeNoneValue(R);
     oriR = R.copy();
-    Preprocess.preprocess1(R);
+    ############################
+    # 矩阵分解填补预处理
+    mean = np.sum(R)/np.count_nonzero(R);
+    mf = MF_bl(R.shape,f,mean);
+    mf.preloadValues(mf_values_path);
+    
+    
+    ############################
+    Preprocess.preprocessMF_rat(R,mf,rat=cmp_rat);
     print(np.sum(R-oriR));
     R/=20.0;
     oriR/=20.0;
@@ -192,7 +204,7 @@ def encoder_run(spa):
     if continue_train:
         encoder.train(R, learn_param, repeat,None);
         encoder.saveValues(values_path);
-    R = oriR;
+    # R = oriR;
     PR = encoder.calFill(R);
     # R = oriR;
     print(R);
@@ -237,7 +249,7 @@ def encoder_run(spa):
     print(S)
         
 if __name__ == '__main__':
-    spas = [1,2,3,4,5,10,15,20];
+    spas = [10,15,20];
     for spa in spas:
         encoder_run(spa);
     pass

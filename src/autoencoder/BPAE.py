@@ -139,7 +139,6 @@ class BPAutoEncoder:
                 x = X[i:i+1,:];
                 py = self.calculate(x);
 
-                
                 mae,rmse=self.evel(py, x,mask_value);
                 err_weight=1.0;
                 if weight_list is not None:

@@ -133,7 +133,7 @@ def encoder_run(spa):
 
 
 if __name__ == '__main__':
-    spas = [1];
+    spas = [20];
     for spa in spas:
         encoder_run(spa);
     pass

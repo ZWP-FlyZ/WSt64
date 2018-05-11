@@ -122,16 +122,17 @@ NoneValue = 0.0;
 
 # autoencoder 参数
 hidden_node = 150;
-learn_rate=0.09;
+learn_rate=0.09
 learn_param = [learn_rate,100,0.99];
 repeat = 500;
 rou=0.1
 
 # 协同过滤参数
-k = 20;
+k = 17;
 loc_w= 1.0;
 
-f=64;
+f=100;
+cmp_rat=0.05;
 
 test_spa=10;
 # 相似列表，shape=(axis0,k),从大到小
@@ -185,7 +186,7 @@ def encoder_run(spa):
     
     
     ############################
-    Preprocess.preprocess(R);
+    Preprocess.preprocessMF_rat(R,mf,rat=cmp_rat);
     print(np.sum(R-oriR));
     R/=20.0;
     oriR/=20.0;
@@ -218,7 +219,7 @@ def encoder_run(spa):
         encoder.train(R, learn_param, repeat,None);
         encoder.saveValues(values_path);
     
-    R = oriR;
+    # R = oriR;
     PR = encoder.calFill(R);
     print(R);
     print();
@@ -227,6 +228,7 @@ def encoder_run(spa):
 ############# PR 还原处理   ###############
     PR = PR * 20.0;
     R = R * 20;
+    oriR=oriR*20;
     PR = np.where(R!=NoneValue,R,PR);
     print(PR);
     if not isUserAutoEncoder:
@@ -299,7 +301,7 @@ def encoder_run(spa):
     # print(S)
         
 if __name__ == '__main__':
-    spas = [1];
+    spas = [1,2,3,4,5];
     for spa in spas:
         encoder_run(spa);
     pass

@@ -44,9 +44,9 @@ lamda = 0.04;
 f = 100;
 
 #训练次数
-repeat = 100
+repeat = 150
 # 学习速率
-learn_rate = 0.02;
+learn_rate = 0.03;
 
 
 us_shape=(339,5825);
@@ -58,7 +58,7 @@ def mf_base_run(spa,case):
     train_data = base_path+'/Dataset/ws/train_n/sparseness%d/training%d.txt'%(spa,case);
     test_data = base_path+'/Dataset/ws/test_n/sparseness%d/test%d.txt'%(spa,case);
        
-    values_path=base_path+'/Dataset/mf_baseline_values/spa%d'%(spa);
+    values_path=base_path+'/Dataset/mf_vsdpp_values/spa%d'%(spa);
     
     print('开始实验，稀疏度=%d,case=%d'%(spa,case));
     print ('加载训练数据开始');
@@ -81,7 +81,6 @@ def mf_base_run(spa,case):
     print ('预处理数据开始');
     tnow = time.time();
     mean,Iu_num=preprocess(R);
-    # R = R/20.0
     # print(mean,Iu_num,len(Iu_num));
     print ('预处理数据结束，耗时 %.2f秒  \n'%((time.time() - tnow)));    
     
@@ -90,13 +89,14 @@ def mf_base_run(spa,case):
     tnow = time.time();
     tx = us_shape[0];
 
-    svd = MFS.MF_bl_ana(R.shape,f,mean);
+    svd = MFS.MF_bl_plus(R.shape,f,mean);
 
     if loadvalues and svd.exisValues(values_path):
         svd.preloadValues(values_path);
     if continue_train:
-        svd.train_mat(R, repeat,learn_rate,lamda,values_path);
-        svd.saveValues(values_path);            
+        svd.train_mat(R, repeat,learn_rate,lamda,None);
+        svd.saveValues(values_path);
+                
     print ('训练模型开始结束，耗时 %.2f秒  \n'%((time.time() - tnow)));  
 
 
@@ -109,29 +109,13 @@ def mf_base_run(spa,case):
     print ('评测开始');
     tnow = time.time();
     mae=0.0;rmse=0.0;cot=0;
-    ana = np.zeros(us_shape);
-    R_ana = np.zeros(us_shape);
     for tc in trdata:
         if tc[2]<=0:
             continue;
-        u = int(tc[0]);
-        s = int(tc[1]);
-        rt = svd.predict(u,s);
-        t =abs(rt-tc[2]);
-        ana[u,s]=t;
-        R_ana[u,s]=tc[2];
-        mae+=t;
+        rt = svd.predict(int(tc[0]),int(tc[1]));
+        mae+=abs(rt-tc[2]);
         rmse+=(rt-tc[2])**2;
         cot+=1;
-    list_ana = ana.reshape((-1,));    
-    ind = np.argsort(-list_ana)[:100];
-    ana_sorted = list_ana[ind];
-    arg_list = [[int(i/us_shape[1]),int(i%us_shape[1])]for i in ind];
-    ori_list = [R_ana[i[0],i[1]] for i in arg_list];
-    np.savetxt(values_path+'/test_ana_value.txt',np.array(ana_sorted),'%.6f');
-    np.savetxt(values_path+'/test_ana_ind.txt',np.array(arg_list),'%d');
-    np.savetxt(values_path+'/test_ana_ori_value.txt',np.array(ori_list),'%.6f');
-
     mae = mae * 1.0 / cot;
     rmse= np.sqrt(rmse/cot);
     print ('评测完成，耗时 %.2f秒\n'%((time.time() - tnow)));    
@@ -140,7 +124,7 @@ def mf_base_run(spa,case):
 
 
 if __name__ == '__main__':
-    for spa in [1]:
+    for spa in [1,2,3,4,5]:
         mf_base_run(spa,case)
     
     pass

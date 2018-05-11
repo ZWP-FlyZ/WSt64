@@ -11,7 +11,7 @@ Created on 2018年4月27日
 
 import numpy as np;
 from mf.MFS import MF_bl as mf;
-
+import random;
 def removeNoneValue(R):
     '''
     清除无效的数据
@@ -107,18 +107,63 @@ def preprocessMF(R,mf,isUAE = True,mr_mut=2):
         
     batch_size = R.shape[0];    
     most = int(np.median(sum_arr));
-    feat_ind = np.where(sum_arr==0)[0];
-    for fid in feat_ind:
-        batch_ind = np.random.randint(0,batch_size,size=most);
-        for bid in batch_ind:
-            if isUAE:
-                R[bid,fid]=mf.predict(bid, fid);
-            else:
-                R[bid,fid]=mf.predict(fid,bid);
+    mean = np.mean(sum_arr);
+    std = np.std(sum_arr);
+    delta = int(mean - mr_mut*std)+1;
+    if delta<1:delta = 1; 
+    
+    for edge in range(delta):
+        feat_ind = np.where(sum_arr==edge)[0];
+        for fid in feat_ind:
+            cmp_size = most-edge;
+            batch_ind = np.random.randint(0,batch_size,size=cmp_size);
+            for bid in batch_ind:
+                if isUAE:
+                    R[bid,fid]=mf.predict(bid, fid);
+                else:
+                    R[bid,fid]=mf.predict(fid,bid);
     if not isUAE:
         R = R.T;    
     pass;
 
+def preprocessMF_rat(R,mf,isUAE = True,rat=0.0):
+    '''
+    由矩阵分解提供填补值
+    '''
+    if not isUAE:
+        R = R.T;    
+    batch_size = R.shape[0];
+    feat_size = R.shape[1];
+    sum_arr = np.zeros((feat_size,),int);
+    contain_sets=[[] for _ in range(feat_size)];
+    none_ind = np.argwhere(R>0);
+    for bid,fid in none_ind:
+        contain_sets[fid].append(bid);
+        sum_arr[fid]+=1;
+        
+    most = int(np.median(sum_arr));
+    if rat<=0.0:
+        delta = 1;
+        top = most;
+    else:
+        top = int(rat*batch_size);
+        delta = top;
+    
+    all_range_set=set(range(batch_size));
+    for edge in range(delta):
+        feat_ind = np.where(sum_arr==edge)[0];
+        for fid in feat_ind:
+            rem_set = all_range_set-set(contain_sets[fid]);
+            cmp_size = top-edge;
+            batch_ind = random.sample(rem_set,cmp_size);
+            for bid in batch_ind:
+                if isUAE:
+                    R[bid,fid]=mf.predict(bid, fid);
+                else:
+                    R[bid,fid]=mf.predict(fid,bid);
+    if not isUAE:
+        R = R.T;    
+    pass;
 
 
 

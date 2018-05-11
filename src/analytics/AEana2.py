@@ -121,7 +121,7 @@ def encoder_run(spa):
     print(mean,std);
     # R = (R-mean)/std;
     delta = mean/std;
-    step_range=1000;
+    step_range=400;
     step = 20.0 / step_range;
     boxes = np.zeros((step_range,),float);
     for u in range(us_shape[0]):
@@ -141,7 +141,7 @@ def encoder_run(spa):
 
 
 if __name__ == '__main__':
-    spas = [15];
+    spas = [1,2,3];
     for spa in spas:
         encoder_run(spa);
     pass
