@@ -340,6 +340,8 @@ class MF_bl_ana:
         ana_sorted = list_ana[ind];
         arg_list = [[int(i/shp[1]),int(i%shp[1])]for i in ind];
         ori_list = [R[i[0],i[1]] for i in arg_list];
+        if not os.path.isdir(save_path):
+            os.mkdir(save_path);
         np.savetxt(save_path+'/ana_value.txt',np.array(ana_sorted),'%.6f');
         np.savetxt(save_path+'/ana_ind.txt',np.array(arg_list),'%d');
         np.savetxt(save_path+'/ana_ori_value.txt',np.array(ori_list),'%.6f');

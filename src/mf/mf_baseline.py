@@ -44,7 +44,7 @@ lamda = 0.04;
 f = 100;
 
 #训练次数
-repeat = 100
+repeat = 150
 # 学习速率
 learn_rate = 0.02;
 
@@ -140,7 +140,7 @@ def mf_base_run(spa,case):
 
 
 if __name__ == '__main__':
-    for spa in [1]:
+    for spa in [2,3,4,5,10,15,20]:
         mf_base_run(spa,case)
     
     pass

@@ -165,7 +165,42 @@ def preprocessMF_rat(R,mf,isUAE = True,rat=0.0):
         R = R.T;    
     pass;
 
+def preprocessMF_random_replace(R,mf,isUAE = True,rat=0.0):
+    '''
+    由矩阵分解提供填补值
+    '''
+    if not isUAE:
+        R = R.T;    
+    batch_size = R.shape[0];
+    feat_size = R.shape[1];
+    sum_arr = np.zeros((feat_size,),int);
+    contain_sets=[[] for _ in range(feat_size)];
+    none_ind = np.argwhere(R>0);
+    for bid,fid in none_ind:
+        contain_sets[fid].append(bid);
+        sum_arr[fid]+=1;
+        
+    most = int(np.median(sum_arr));
+    if rat<=0.0:
+        delta = 1;
+        top = most;
+    else:
+        top = int(rat*batch_size);
+        delta = top;
+    
+    all_range_set=set(range(batch_size));
 
+    for fid in range(feat_size):
+        R[:,fid]=0;
+        batch_ind = random.sample(all_range_set,top);
+        for bid in batch_ind:
+            if isUAE:
+                R[bid,fid]=mf.predict(bid, fid);
+            else:
+                R[bid,fid]=mf.predict(fid,bid);
+    if not isUAE:
+        R = R.T;    
+    pass;
 
 
 if __name__ == '__main__':

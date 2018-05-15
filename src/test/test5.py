@@ -33,9 +33,8 @@ if __name__ == '__main__':
      
      
     b = np.array([1,2,3,4]);
-    print(np.power(10,b));
-    a = range(0,2);  
-    print([i for i in range(2,1)]); 
-     
+    print(np.power(10,b));  
+    a[:,1]=0;
+    print(a)
         
     pass;
