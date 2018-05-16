@@ -203,5 +203,17 @@ def preprocessMF_random_replace(R,mf,isUAE = True,rat=0.0):
     pass;
 
 
+def random_empty(R ,cut_rat,NoneValue=0):
+    ind = np.argwhere(R!=NoneValue);
+    data_size = len(ind);
+    cut_ind = random.sample(range(data_size),int(cut_rat*data_size));
+    cut_us = ind[cut_ind];
+    for u,s in cut_us:
+        R[u,s]=NoneValue;
+    pass;
+
+
+
+
 if __name__ == '__main__':
     pass

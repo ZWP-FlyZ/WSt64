@@ -132,7 +132,7 @@ k = 17;
 loc_w= 1.0;
 
 f=100;
-cmp_rat=0.05;
+cmp_rat=0.07;
 
 test_spa=10;
 # 相似列表，shape=(axis0,k),从大到小
@@ -235,7 +235,10 @@ def encoder_run(spa):
         PR = PR.T;
         R = R.T;    
 ############# PR 还原处理   ###############        
-    print ('训练模型开始结束，耗时 %.2f秒  \n'%((time.time() - tnow)));  
+    print ('训练模型结束，耗时 %.2f秒  \n'%((time.time() - tnow)));  
+
+
+
 
 
     global W,S;
@@ -281,8 +284,8 @@ def encoder_run(spa):
     print ('评测开始');
     tnow = time.time();
     mae=0.0;rmse=0.0;cot=0;
-    print('oR',oR);
-    print('R',R);
+#     print('oR',oR);
+#     print('R',R);
     for tc in trdata:
         if tc[2]<=0:
             continue;
@@ -301,7 +304,7 @@ def encoder_run(spa):
     # print(S)
         
 if __name__ == '__main__':
-    spas = [1,2,3,4,5];
+    spas = [2,3,4];
     for spa in spas:
         encoder_run(spa);
     pass

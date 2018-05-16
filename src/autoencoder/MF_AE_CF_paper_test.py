@@ -75,6 +75,30 @@ def predict(u,s,R,W,S):
         return 0.2;
 
 
+def predict_for_s(u,s,R,W,S):
+    global loc_tab;
+    a0 = s;
+    a1 = u;
+    
+    sum = 0.0;cot=0.0;
+    for item in S[a0,:]:
+        if W[a0,item]<=0.0:
+            break;
+        if R[item,a1] ==NoneValue:
+            continue;
+        rw = (W[a0,item]);            
+#         if loc_tab[a0]==loc_tab[item]:
+#             rw *=loc_w;
+        
+        sum+= rw*R[item,a1];
+        cot+=rw;
+    if cot != 0:
+        return sum/cot;
+    else:
+        return 0.2;
+
+
+
 base_path = r'E:/work';
 if SysCheck.check()=='l':
     base_path='/home/zwp/work'
@@ -88,8 +112,8 @@ isUserAutoEncoder=True;
 isICF=False;
 
 # 加载AutoEncoder
-loadvalues= False;
-continue_train = True;
+loadvalues= True;
+continue_train = False;
 # 加载相似度矩阵
 readWcache=False;
 
@@ -103,7 +127,7 @@ if isICF:
 mean = 0.908570086101;
 ek = 1.9325920405;
 # 训练例子
-case = 1;
+case = 2;
 NoneValue = 0.0;
 
 # autoencoder 参数
@@ -113,14 +137,24 @@ learn_param = [learn_rate,100,0.99];
 repeat = 500;
 rou=0.1
 
+cut_rate = 0.5;
+
+
 # 协同过滤参数
-k = 17;
+k = 17; # user-cf-k;
+sk = 17; # service-cf-k;
+cf_w = 0.7;
+
+
+load_SW =  True;
+
+
 loc_w= 1.0;
 
 f=100;
 cmp_rat=0.05;
 
-test_spa=10;
+test_spa=3;
 # 相似列表，shape=(axis0,k),从大到小
 S = None;
 R = None;
@@ -135,6 +169,7 @@ def encoder_run(spa):
     train_data = base_path+'/Dataset/ws/train_n/sparseness%d/training%d.txt'%(spa,case);
     test_data = base_path+'/Dataset/ws/test_n/sparseness%d/test%d.txt'%(spa,case);
     W_path = base_path+'/Dataset/ws/BP_CF_W_spa%d_t%d.txt'%(spa,case);
+    SW_path = base_path+'/Dataset/ws/BP_CF_SW_spa%d_t%d.txt'%(spa,case);
     loc_path = base_path+'/Dataset/ws';   
     values_path=base_path+'/Dataset/ae_values_space/spa%d'%(spa);
     
@@ -172,7 +207,7 @@ def encoder_run(spa):
     
     
     ############################
-    Preprocess.preprocessMF_random_replace(R,mf,rat=cmp_rat);
+    Preprocess.preprocessMF_rat(R,mf,rat=cmp_rat);
     print(np.sum(R-oriR));
     R/=20.0;
     oriR/=20.0;
@@ -224,35 +259,71 @@ def encoder_run(spa):
     print ('训练模型开始结束，耗时 %.2f秒  \n'%((time.time() - tnow)));  
 
 
+    print ('随机删除开始');
+    tnow = time.time();
+    Preprocess.random_empty(PR, cut_rate);
+    print ('随机删除开始，耗时 %.2f秒  \n'%((time.time() - tnow)));
+
+
+
     global W,S;
     print ('计算相似度矩阵开始');
     tnow = time.time();
     oR = R;
     R=PR;
-    if isICF:
-        R = R.T;
-    if readWcache and os.path.exists(W_path):   
-        W = np.loadtxt(W_path, np.float64);
+    for i in range(axis0-1):
+        if i%50 ==0:
+            print('----->step%d'%(i))
+        for j in range(i+1,axis0):
+            ws = 0.0;
+            a = R[i,:];
+            b = R[j,:];
+            # log = 
+            deta = np.subtract(a,b,out=np.zeros_like(a),
+                               where=((a!=NoneValue) & (b!=NoneValue)))
+            ws += np.sum(deta**2);
+            W[i,j]=W[j,i]= 1.0/math.exp(np.sqrt(ws/axis1));
+
+            # origin W[i,j]=W[j,i]=1.0/(ws ** (1.0/p)+1.0);
+            # W[i,j]=W[j,i]=1.0/( ((ws/cot) ** (1.0/p))+1.0);
+            
+            # W[i,j]=W[j,i]= 1.0/math.exp(((ws) ** (1.0/p))/cot);
+    np.savetxt(W_path,W,'%.30f');
+    
+    R=PR.T;
+    SW = np.zeros((axis1,axis1));
+    
+    if os.path.exists(SW_path) and load_SW:
+        SW = np.loadtxt(SW_path,np.float64);
     else:
-        for i in range(axis0-1):
+        for i in range(axis1-1):
             if i%50 ==0:
                 print('----->step%d'%(i))
-            for j in range(i+1,axis0):
+            for j in range(i+1,axis1):
                 ws = 0.0;
-                ws += np.sum((R[i,:]-R[j,:])**2);
-                W[i,j]=W[j,i]= 1.0/math.exp(np.sqrt(ws/axis1));
-
+                a = R[i,:];
+                b = R[j,:];
+                # log = 
+                deta = np.subtract(a,b,out=np.zeros_like(a),
+                                   where=((a!=NoneValue) & (b!=NoneValue)))
+                ws += np.sum(deta**2);
+                SW[i,j]=SW[j,i]= 1.0/math.exp(np.sqrt(ws/axis1));
+    
                 # origin W[i,j]=W[j,i]=1.0/(ws ** (1.0/p)+1.0);
                 # W[i,j]=W[j,i]=1.0/( ((ws/cot) ** (1.0/p))+1.0);
                 
                 # W[i,j]=W[j,i]= 1.0/math.exp(((ws) ** (1.0/p))/cot);
-        np.savetxt(W_path,W,'%.30f');                
+        np.savetxt(SW_path,SW,'%.10f');    
+    
+    R = PR;
+                    
     print ('计算相似度矩阵结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
 
 
     print ('生成相似列表开始');
     tnow = time.time();
-    S = np.argsort(-W)[:,0:k];            
+    S = np.argsort(-W)[:,0:k];
+    SS = np.argsort(-SW)[:,0:sk];            
     print ('生成相似列表开始结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
 
 
@@ -272,7 +343,9 @@ def encoder_run(spa):
     for tc in trdata:
         if tc[2]<=0:
             continue;
-        rt = predict(int(tc[0]),int(tc[1]),R,W,S);
+        urt = predict(int(tc[0]),int(tc[1]),R,W,S);
+        srt = predict_for_s(int(tc[0]),int(tc[1]), R.T, SW, SS)
+        rt = cf_w * urt + (1-cf_w)*srt;
         mae+=abs(rt-tc[2]);
         rmse+=(rt-tc[2])**2;
         cot+=1;
@@ -287,7 +360,7 @@ def encoder_run(spa):
     # print(S)
         
 if __name__ == '__main__':
-    spas = [1,2,3,4,5];
+    spas = [test_spa];
     for spa in spas:
         encoder_run(spa);
     pass

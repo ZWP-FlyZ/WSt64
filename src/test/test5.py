@@ -25,7 +25,7 @@ if __name__ == '__main__':
     print([[] for i in range(4)]);
     
     t = set([1,2,3])-set([2,3]);
-    print(random.sample([1,2,3,4,5],4));
+    print(random.sample(range(10),4));
     
     print(np.sum(a[[]],axis=0));
     
@@ -34,7 +34,6 @@ if __name__ == '__main__':
      
     b = np.array([1,2,3,4]);
     print(np.power(10,b));  
-    a[:,1]=0;
-    print(a)
+    c = np.where(a>0);
         
     pass;

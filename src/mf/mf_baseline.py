@@ -50,7 +50,7 @@ learn_rate = 0.02;
 
 
 us_shape=(339,5825);
-case = 1;
+case = 2;
 loadvalues=False;
 continue_train=True;
 
@@ -140,7 +140,7 @@ def mf_base_run(spa,case):
 
 
 if __name__ == '__main__':
-    for spa in [2,3,4,5,10,15,20]:
+    for spa in [3]:
         mf_base_run(spa,case)
     
     pass
