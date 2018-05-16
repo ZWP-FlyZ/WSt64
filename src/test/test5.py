@@ -29,8 +29,13 @@ if __name__ == '__main__':
     
     print(np.sum(a[[]],axis=0));
     
-    path = '/home/zwp/work/Dataset/mf_vsdpp_values/spa1';
-    print(os.mkdir(path));
-    
+    print(a[np.where(a>0)]);
+     
+     
+    b = np.array([1,2,3,4]);
+    print(np.power(10,b));
+    a = range(0,2);  
+    print([i for i in range(2,1)]); 
+     
         
     pass;
