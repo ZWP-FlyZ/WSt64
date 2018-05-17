@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 '''
-Created on 2018年4月27日
+Created on 2018年5月17日
 
-@author: zwp
+@author: zwp12
 '''
+
+
+
+
 
 import numpy as np;
 import time;
@@ -77,64 +81,41 @@ W = np.full((axis0,axis0), 0, float);
 fid = 1;
 def setFigure(X,Y,fid):
     plt.figure(fid);
-    plt.scatter(X,Y);
+    plt.plot(X,Y);
     plt.show();
 
 
 
 
 def encoder_run(spa):
-    train_data = base_path+'/Dataset/ws/train_n/sparseness%d/training%d.txt'%(spa,case);
-    test_data = base_path+'/Dataset/ws/test_n/sparseness%d/test%d.txt'%(spa,case);
-    W_path = base_path+'/Dataset/ws/BP_CF_W_spa%d_t%d.txt'%(spa,case);
-    loc_path = base_path+'/Dataset/ws';   
+  
     values_path=base_path+'/Dataset/ae_values_space/spa%d'%(spa);
     
-    # train_data = test_data;
     print('开始实验，稀疏度=%d,case=%d'%(spa,case));
     print ('加载训练数据开始');
     now = time.time();
-    trdata = np.loadtxt(train_data, dtype=float);
-    n = np.alen(trdata);
-    print ('加载训练数据完成，耗时 %.2f秒，数据总条数%d  \n'%((time.time() - now),n));
+    ana_index = np.loadtxt(values_path+'/test_ana_ind.txt',dtype=int);
+    ones= np.loadtxt(values_path+'/one_ind.txt',dtype=int);
+    zeroes= np.loadtxt(values_path+'/zero_ind.txt',dtype=int);
+    print ('加载训练数据完成，耗时 %.2f秒，数据总条数%d  \n'%((time.time() - now),len(ana_index)));
     
     print ('转换数据到矩阵开始');
     tnow = time.time();
-    u = trdata[:,0];
-    s = trdata[:,1];
-    u = np.array(u,int);
-    s = np.array(s,int);
-    R = np.full(us_shape, NoneValue, float);
-    R[u,s]=trdata[:,2];
-    del trdata,u,s;
+    ser_ind = np.unique(ana_index[:,1]);
+    print(ser_ind);
+    print(zeroes);
+    print(ones);    
+    print(len(ser_ind),len(zeroes),len(ones));
+    
+    
+    zero_err = np.intersect1d(zeroes, ser_ind);
+    one_err = np.intersect1d(ones, ser_ind);
+    print(zero_err);
+    print(one_err);    
+    print(len(zero_err),len(one_err));    
+    
     print ('转换数据到矩阵结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
     
-    print ('预处理数据开始');
-    tnow = time.time();
-    Preprocess.removeNoneValue(R);
-    Preprocess.preprocess(R);
-    R=preprocess(R);
-    print ('预处理数据结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
-
-    if isUserAutoEncoder:
-        x_list = np.arange(us_shape[1]);
-        sum_list = np.sum(R,axis=0);
-    else:
-        x_list = np.arange(us_shape[0]);
-        sum_list = np.sum(R,axis=1);
-
-    print(np.median(sum_list),np.mean(sum_list),np.std(sum_list))
-
-    zeros = np.array(np.where(sum_list==0)[0]);
-    one = np.array(np.where(sum_list==1)[0]);
-    np.savetxt(values_path+'/zero_ind.txt',zeros,'%d');
-    np.savetxt(values_path+'/one_ind.txt',one,'%d');     
-    print(len(zeros));
-    print(len(one));
-    print(len(np.where(sum_list==2)[0]));
-    print(len(np.where(sum_list==3)[0]));
-    print(len(np.where(sum_list==4)[0]));
-    setFigure(x_list, sum_list, spa);
 
     
 

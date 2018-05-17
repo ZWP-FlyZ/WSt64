@@ -19,7 +19,7 @@ import os;
 from sklearn.model_selection import train_test_split;
 from tools import SysCheck;
 
-base_path = r'E:';
+base_path = r'E:/work';
 if SysCheck.check()=='l':
     base_path='/home/zwp/work'
     
@@ -27,7 +27,7 @@ origin_data_path = base_path+'/Dataset/ws/rtmatrix.txt';
 train_output_path = base_path+'/Dataset/ws/train_n'
 test_output_path = base_path+'/Dataset/ws/test_n'
 
-spa_list=[1,2,3,4,5,10,15,20,25,30,40];
+spa_list=[1];
 case_cout=5;
 replace_param=[-1,-1];
 
@@ -86,7 +86,8 @@ def run():
         for case in range(1,case_cout+1):
             print ('-->开始生成稀疏度%d%%数据,数据量%d,case=%d'%(spa,d_size,case));
             tnow = time.time();
-            td_size = int(d_size/10);
+            # td_size = int(d_size/10);
+            td_size = int(d_size);
             test_x,left_x,test_y,left_y = train_test_split(feature,lable,train_size=td_size);
             test_y = test_y.reshape([td_size,1]);
             new_test=np.hstack((test_x,test_y));
