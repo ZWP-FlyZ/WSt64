@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
-Created on 2018年1月23日
+Created on 2018年5月18日
 
 @author: zwp12
 '''
@@ -8,7 +8,7 @@ Created on 2018年1月23日
 
 '''
 
-BPencoder 代码思路来自论文《基于自编码器的评分预测算法》
+类似降噪自编码器
 
 在us矩阵中，空值用NoneVale 替代，在神经网络训练过程中，
 跳过对NoneValue对应节点参数的调整
@@ -109,7 +109,7 @@ case = 1;
 NoneValue = 0.0;
 
 # autoencoder 参数
-hidden_node = 100;
+hidden_node = 150;
 learn_rate=0.09;
 learn_param = [learn_rate,100,0.99];
 repeat = 500;
@@ -120,7 +120,7 @@ k = 10;
 loc_w= 1.0;
 
 f=100
-cmp_rat=0.05
+cmp_rat=0.15
 
 test_spa=20;
 # 相似列表，shape=(axis0,k),从大到小
@@ -138,7 +138,7 @@ def encoder_run(spa):
     test_data = base_path+'/Dataset/ws/test_n/sparseness%d/test%d.txt'%(spa,case);
     W_path = base_path+'/Dataset/ws/BP_CF_W_spa%d_t%d.txt'%(spa,case);
     loc_path = base_path+'/Dataset/ws';   
-    values_path=base_path+'/Dataset/ae_values_space/spa%d'%(spa);
+    values_path=base_path+'/Dataset/dae_values/spa%d'%(spa);
     mf_values_path=base_path+'/Dataset/mf_baseline_values/spa%d'%(spa);
         
     print('开始实验，稀疏度=%d,case=%d'%(spa,case));
@@ -193,7 +193,7 @@ def encoder_run(spa):
     tx = us_shape[0];
     if isUserAutoEncoder:
         tx = us_shape[1];
-    encoder = BPAE.BPAutoEncoder(tx,hidden_node,
+    encoder = BPAE.DenoiseAutoEncoder(tx,hidden_node,
                             actfunc1,deactfunc1,
                              actfunc1,deactfunc1,check_none);
     if not isUserAutoEncoder:
@@ -202,7 +202,7 @@ def encoder_run(spa):
     if loadvalues and encoder.exisValues(values_path):
         encoder.preloadValues(values_path);
     if continue_train:
-        encoder.train(R, learn_param, repeat,None);
+        encoder.train(R, oriR,learn_param, repeat,None);
         encoder.saveValues(values_path);
     # R = oriR;
     PR = encoder.calFill(R);
@@ -212,6 +212,7 @@ def encoder_run(spa):
     print(PR);
     print();
 ############# PR 还原处理   ###############
+    oriR = oriR * 20;
     PR = PR * 20.0;
     R = R * 20;
     PR = np.where(R!=NoneValue,R,PR);
@@ -249,7 +250,7 @@ def encoder_run(spa):
     print(S)
         
 if __name__ == '__main__':
-    spas = [1];
+    spas = [10];
     for spa in spas:
         encoder_run(spa);
     pass
