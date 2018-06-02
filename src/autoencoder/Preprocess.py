@@ -126,6 +126,12 @@ def preprocessMF(R,mf,isUAE = True,mr_mut=2):
         R = R.T;    
     pass;
 
+
+def preprocessMF_rat_us(R,mf,rat=0.0):
+    preprocessMF_rat(R,mf,isUAE = True,rat=rat);
+    preprocessMF_rat(R,mf,isUAE = False,rat=rat);
+
+
 def preprocessMF_rat(R,mf,isUAE = True,rat=0.0):
     '''
     由矩阵分解提供填补值

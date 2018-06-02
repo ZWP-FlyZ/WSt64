@@ -132,9 +132,9 @@ k = 17;
 loc_w= 1.0;
 
 f=100;
-cmp_rat=0.07;
+cmp_rat=0.010;
 
-test_spa=10;
+test_spa=5;
 # 相似列表，shape=(axis0,k),从大到小
 S = None;
 R = None;
@@ -186,7 +186,7 @@ def encoder_run(spa):
     
     
     ############################
-    Preprocess.preprocessMF_rat(R,mf,rat=cmp_rat);
+    Preprocess.preprocessMF_rat(R,mf,False,rat=cmp_rat);
     print(np.sum(R-oriR));
     R/=20.0;
     oriR/=20.0;
@@ -304,7 +304,7 @@ def encoder_run(spa):
     # print(S)
         
 if __name__ == '__main__':
-    spas = [2,3,4];
+    spas = [5];
     for spa in spas:
         encoder_run(spa);
     pass

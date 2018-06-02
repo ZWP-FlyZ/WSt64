@@ -154,7 +154,7 @@ loc_w= 1.0;
 f=100;
 cmp_rat=0.2;
 
-test_spa=15;
+test_spa=2;
 # 相似列表，shape=(axis0,k),从大到小
 S = None;
 R = None;

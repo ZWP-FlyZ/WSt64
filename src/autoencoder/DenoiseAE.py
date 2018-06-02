@@ -90,8 +90,8 @@ isUserAutoEncoder=True;
 isICF=False;
 
 # 加载AutoEncoder
-loadvalues= False;
-continue_train = True;
+loadvalues= True;
+continue_train = False;
 # 加载相似度矩阵
 readWcache=False;
 
@@ -120,7 +120,7 @@ k = 10;
 loc_w= 1.0;
 
 f=100
-cmp_rat=0.15
+cmp_rat=0.05
 
 test_spa=20;
 # 相似列表，shape=(axis0,k),从大到小
@@ -171,7 +171,7 @@ def encoder_run(spa):
     
     
     ############################
-    Preprocess.preprocessMF_rat(R,mf,rat=cmp_rat);
+    Preprocess.preprocessMF_rat(R,mf,isUAE=False,rat=cmp_rat);
     print(np.sum(R-oriR));
     R/=20.0;
     oriR/=20.0;
@@ -250,7 +250,7 @@ def encoder_run(spa):
     print(S)
         
 if __name__ == '__main__':
-    spas = [10];
+    spas = [2];
     for spa in spas:
         encoder_run(spa);
     pass
