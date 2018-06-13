@@ -121,7 +121,7 @@ def encoder_run(spa):
 
 
 if __name__ == '__main__':
-    spas = [1];
+    spas = [10];
     for spa in spas:
         encoder_run(spa);
     pass

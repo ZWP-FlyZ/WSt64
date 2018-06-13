@@ -30,7 +30,7 @@ origin_data = base_path+'/rtdata.txt';
 
 us_shape=(339,5825);
 # 是否基于用户的自编码器，预测每个用户的所有服务值
-isUserAutoEncoder=False;
+isUserAutoEncoder=True;
 # 是否基于服务的CF方法
 isICF=False;
 
@@ -140,7 +140,7 @@ def encoder_run(spa):
 
 
 if __name__ == '__main__':
-    spas = [2];
+    spas = [10];
     for spa in spas:
         encoder_run(spa);
     pass
