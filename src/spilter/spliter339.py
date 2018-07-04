@@ -27,7 +27,7 @@ origin_data_path = base_path+'/Dataset/ws/rtmatrix.txt';
 train_output_path = base_path+'/Dataset/ws/train_n'
 test_output_path = base_path+'/Dataset/ws/test_n'
 
-spa_list=[1];
+spa_list=[2.5,5,10,15,20];
 case_cout=5;
 replace_param=[-1,-1];
 
@@ -77,17 +77,17 @@ def run():
     
     for spa in spa_list:
         d_size = int(spa / 100.0 * n);
-        test_path = test_output_path+'/sparseness%d'%(spa);
+        test_path = test_output_path+'/sparseness%.1f'%(spa);
         if not os.path.isdir(test_path):
             os.makedirs(test_path);
-        train_path = train_output_path+'/sparseness%d'%(spa);
+        train_path = train_output_path+'/sparseness%.1f'%(spa);
         if not os.path.isdir(train_path):
             os.makedirs(train_path);        
         for case in range(1,case_cout+1):
-            print ('-->开始生成稀疏度%d%%数据,数据量%d,case=%d'%(spa,d_size,case));
+            print ('-->开始生成稀疏度%.1f%%数据,数据量%d,case=%d'%(spa,d_size,case));
             tnow = time.time();
-            # td_size = int(d_size/10);
-            td_size = int(d_size);
+            td_size = int(d_size/10);
+            # td_size = int(d_size);
             test_x,left_x,test_y,left_y = train_test_split(feature,lable,train_size=td_size);
             test_y = test_y.reshape([td_size,1]);
             new_test=np.hstack((test_x,test_y));

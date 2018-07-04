@@ -46,21 +46,23 @@ f = 100;
 #训练次数
 repeat = 150
 # 学习速率
-learn_rate = 0.02;
+learn_rate = 0.015;
 
+
+spas=[2.5,5,10,15,20]
 
 us_shape=(339,5825);
-case = 1;
+case = 3;
 loadvalues=False;
 continue_train=True;
 
 def mf_base_run(spa,case):
-    train_data = base_path+'/Dataset/ws/train_n/sparseness%d/training%d.txt'%(spa,case);
-    test_data = base_path+'/Dataset/ws/test_n/sparseness%d/test%d.txt'%(spa,case);
+    train_data = base_path+'/Dataset/ws/train_n/sparseness%.1f/training%d.txt'%(spa,case);
+    test_data = base_path+'/Dataset/ws/test_n/sparseness%.1f/test%d.txt'%(spa,case);
        
-    values_path=base_path+'/Dataset/mf_baseline_values/spa%d'%(spa);
+    values_path=base_path+'/Dataset/mf_baseline_values/spa%.1f_case%d'%(spa,case);
     
-    print('开始实验，稀疏度=%d,case=%d'%(spa,case));
+    print('开始实验，稀疏度=%.1f,case=%d'%(spa,case));
     print ('加载训练数据开始');
     now = time.time();
     trdata = np.loadtxt(train_data, dtype=float);
@@ -136,11 +138,11 @@ def mf_base_run(spa,case):
     rmse= np.sqrt(rmse/cot);
     print ('评测完成，耗时 %.2f秒\n'%((time.time() - tnow)));    
 
-    print('实验结束，总耗时 %.2f秒,稀疏度=%d,MAE=%.6f,RMSE=%.6f\n'%((time.time()-now),spa,mae,rmse));
+    print('实验结束，总耗时 %.2f秒,稀疏度=%.1f,MAE=%.6f,RMSE=%.6f\n'%((time.time()-now),spa,mae,rmse));
 
 
 if __name__ == '__main__':
-    for spa in [10]:
+    for spa in spas:
         mf_base_run(spa,case)
     
     pass

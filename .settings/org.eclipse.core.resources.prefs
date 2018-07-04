@@ -22,6 +22,7 @@ encoding//src/autoencoder/BPencoder_movielen.py=utf-8
 encoding//src/autoencoder/DAE_CF_loc.py=utf-8
 encoding//src/autoencoder/DAE_NewCF.py=utf-8
 encoding//src/autoencoder/DAE_NewCF_compx.py=utf-8
+encoding//src/autoencoder/DAE_NewCF_final.py=utf-8
 encoding//src/autoencoder/DenoiseAE.py=utf-8
 encoding//src/autoencoder/MF_AE_CF_paper_test.py=utf-8
 encoding//src/autoencoder/MF_AE_CF_paper_test2.py=utf-8
