@@ -27,8 +27,8 @@ origin_data_path = base_path+'/Dataset/ws/rtmatrix.txt';
 train_output_path = base_path+'/Dataset/ws/train_n'
 test_output_path = base_path+'/Dataset/ws/test_n'
 
-spa_list=[2.5,5,10,15,20];
-case_cout=5;
+spa_list=[2.5];
+case_cout=15;
 replace_param=[-1,-1];
 
 

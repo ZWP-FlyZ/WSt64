@@ -131,7 +131,7 @@ continue_train = False;
 readWcache=True;
 
 # 训练例子
-case = 3;
+case = 1;
 NoneValue = 0.0;
 
 # autoencoder 参数
@@ -142,8 +142,22 @@ repeat = 500;
 rou=0.1
 
 # 协同过滤参数
-k = 17;
+k = 11;
 sk = 17;
+def get_cf_k(spa):
+    if   spa==2.5:  return 20;
+    elif spa==5.0:  return 22;
+    elif spa==10.0: return 15;
+    elif spa==15.0: return 15;
+    else:           return 12; 
+
+def get_cf_sk(spa):
+    if   spa==2.5:  return 230;
+    elif spa==5.0:  return 200;
+    elif spa==10.0: return 80;
+    elif spa==15.0: return 30;
+    else:           return 25; 
+
 loc_w= 1.0;
 
 #矩阵分解特征数
@@ -154,24 +168,32 @@ def out_cmp_rat(spa):
     else:
         return spa/100.0+0.05;
 
+
 # 随机删除比率
 cut_rate = 0.5;
 
 # 特征权重约束系数
 w_d=50;
-sw_d=100
+sw_d=70;
 # 测试列表
-test_spa=[2.5];
+test_spa=[2.5,5,10,15,20];
 # 地理位置表
 loc_tab=None;
 
 # 混合CF 比例u:s
-cf_w = 0.5;
+cf_w = 0.0;
+
+
+last_w_path = '';
+tmp_W=None;    
+tmp_SW=None;
 
 
 ############################### 参数区 结束 ###############################
 
 def encoder_run(spa):
+    
+    global last_w_path,tmp_W,tmp_SW;
     train_data = base_path+'/Dataset/ws/train_n/sparseness%.1f/training%d.txt'%(spa,case);
     test_data = base_path+'/Dataset/ws/test_n/sparseness%.1f/test%d.txt'%(spa,case);
     W_path = base_path+'/Dataset/ws/BP_CF_W_spa%.1f_t%d.txt'%(spa,case);
@@ -302,18 +324,22 @@ def encoder_run(spa):
     print ('计算相似度矩阵开始');
     tnow = time.time();
     mf_R = R;
-      
+    
+    if readWcache and (last_w_path != W_path):
+        last_w_path = W_path;
+        tmp_W = np.loadtxt(W_path, np.float64);
+        tmp_SW = np.loadtxt(SW_path, np.float64);
+          
     # U-CF
     R=PR;
     bat_size,feat_size = R.shape;
     W = np.zeros((bat_size,bat_size));
     show_step = int(bat_size/100);
-    if readWcache and os.path.exists(W_path) and False: 
-        del W;  
-        W = np.loadtxt(W_path, np.float64);
+    if readWcache and os.path.exists(W_path) :  
+        W = tmp_W;
     else:
         for i in range(bat_size-1):
-            if i%30 ==0:
+            if i%60 ==0:
                 print('----->u-cf step%d'%(i));
             a = R[i,:];
             for j in range(i+1,bat_size):
@@ -335,21 +361,22 @@ def encoder_run(spa):
     R=PR.T;
     bat_size,feat_size = R.shape;
     SW = np.zeros((bat_size,bat_size));
-    show_step = int(bat_size/100);
+    show_step = 500;
     
-    if readWcache and os.path.exists(SW_path): 
-        del SW;  
-        SW = np.loadtxt(SW_path, np.float64);
+    if readWcache and os.path.exists(SW_path):  
+        SW = tmp_SW;
     else:
         for i in range(bat_size-1):
             if i%show_step ==0:
                 print('----->s-cf step%d'%(i));
             a = R[i,:];
+            oria = oriR[:,i];
             for j in range(i+1,bat_size):
-                b = R[j,:];                
+                b = R[j,:];
+                orib = oriR[:,j];                
                 log_and = (a!=0) & (b!=0);
                 ws = np.zeros_like(a);
-                ana_chp= get_ana_item(R.shape,a,b);
+                ana_chp= get_ana_item(R.shape,oria,orib);
                 for indexk in range(3):
                     tmp = log_and & ana_chp[indexk];
                     ws+=np.subtract(a,b,out=np.zeros_like(a),where=tmp) \
@@ -365,8 +392,10 @@ def encoder_run(spa):
 
     print ('生成相似列表开始');
     tnow = time.time();
+    k  = get_cf_k(spa);
+    sk = get_cf_sk(spa);
     S = np.argsort(-W)[:,0:k];
-    SS = np.argsort(-SW)[:,0:k];
+    SS = np.argsort(-SW)[:,0:sk];
     print ('生成相似列表开始结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
 
 
@@ -396,7 +425,7 @@ def encoder_run(spa):
     print ('评测完成，耗时 %.2f秒\n'%((time.time() - tnow)));    
 
     print('实验结束，总耗时 %.2f秒,稀疏度=%d,MAE=%.6f,RMSE=%.6f\n'%((time.time()-now),spa,mae,rmse));
-
+    return mae,rmse;
 
 
 
@@ -404,6 +433,31 @@ def encoder_run(spa):
 
 
 if __name__ == '__main__':
-    for spa in test_spa:
-        encoder_run(spa);
+#     for spa in test_spa:
+#         encoder_run(spa);
+
+    avg_tmp = np.zeros((11));
+
+    for ca in range(1,6):
+        case = ca;
+        i=0;
+        for tk in range(0,101,10):
+            tk=tk/100.0;
+            print(tk);
+            cf_w = tk;
+            mae,_=encoder_run(5);
+            avg_tmp[i]+=mae;
+            i+=1;
+    avg_tmp/=5;
+    print(avg_tmp);
+#     for tk in range(3,130,4):
+#         print(tk);
+#         k = tk;
+#         encoder_run(2.5);
+
+#     for tk in range(5,206,10):
+#         print(tk);
+#         sk = tk;
+#         encoder_run(10);
+#         
     pass
