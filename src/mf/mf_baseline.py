@@ -49,7 +49,7 @@ repeat = 150
 learn_rate = 0.015;
 
 
-spas=[2.5,5,10,15,20]
+spas=[15,20]
 
 us_shape=(339,5825);
 case = 3;
@@ -143,6 +143,8 @@ def mf_base_run(spa,case):
 
 if __name__ == '__main__':
     for spa in spas:
-        mf_base_run(spa,case)
+        for ca in range(6,13):
+            case = ca;
+            mf_base_run(spa,case);
     
     pass

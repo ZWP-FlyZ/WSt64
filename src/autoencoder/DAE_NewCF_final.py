@@ -145,11 +145,11 @@ rou=0.1
 k = 11;
 sk = 17;
 def get_cf_k(spa):
-    if   spa==2.5:  return 20;
-    elif spa==5.0:  return 22;
+    if   spa==2.5:  return 18;
+    elif spa==5.0:  return 18;
     elif spa==10.0: return 15;
-    elif spa==15.0: return 15;
-    else:           return 12; 
+    elif spa==15.0: return 11;
+    else:           return 11; 
 
 def get_cf_sk(spa):
     if   spa==2.5:  return 230;
@@ -170,18 +170,18 @@ def out_cmp_rat(spa):
 
 
 # 随机删除比率
-cut_rate = 0.5;
+cut_rate = 0.2;
 
 # 特征权重约束系数
 w_d=50;
-sw_d=70;
+sw_d=100;
 # 测试列表
-test_spa=[2.5,5,10,15,20];
+test_spa=[20];
 # 地理位置表
 loc_tab=None;
 
 # 混合CF 比例u:s
-cf_w = 0.0;
+cf_w = 0.3;
 
 
 last_w_path = '';
@@ -383,7 +383,7 @@ def encoder_run(spa):
                         * ana_chp[indexk+3];
                 ws=ws*feat_w_su;
                 ws=np.sum(ws**2);
-                SW[i,j]=SW[j,i]= 1.0/math.exp(np.sqrt(ws/feat_size));
+                SW[i,j]=SW[j,i]= 1.0/math.exp(np.power(ws/feat_size,1.0/3));
         np.savetxt(SW_path,SW,'%.12f');        
         
     R = PR;                    
@@ -392,8 +392,8 @@ def encoder_run(spa):
 
     print ('生成相似列表开始');
     tnow = time.time();
-    k  = get_cf_k(spa);
-    sk = get_cf_sk(spa);
+#     k  = get_cf_k(spa);
+#     sk = get_cf_sk(spa);
     S = np.argsort(-W)[:,0:k];
     SS = np.argsort(-SW)[:,0:sk];
     print ('生成相似列表开始结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
@@ -433,31 +433,62 @@ def encoder_run(spa):
 
 
 if __name__ == '__main__':
+    
+    
+    
+    
+    
 #     for spa in test_spa:
 #         encoder_run(spa);
 
-    avg_tmp = np.zeros((11));
 
-    for ca in range(1,6):
-        case = ca;
+#     for spa in test_spa:
+#         for ca in range(7,13):
+#             case=ca;
+#             encoder_run(spa);
+
+
+
+#     avg_tmp = np.zeros((11));
+#     for ca in range(1,13):
+#         case = ca;
+#         i=0;
+#         for tk in range(0,101,10):
+#             tk=tk/100.0;
+#             print(tk);
+#             cf_w = tk;
+#             mae,_=encoder_run(20.0);
+#             avg_tmp[i]+=mae;
+#             i+=1;
+#     avg_tmp/=12;
+#     print(avg_tmp);
+    
+#     cf_w=1.0;
+#     avg_tmp = np.zeros((30));
+#     for ca in range(1,13):
+#         i=0;
+#         case=ca;
+#         for tk in range(3,80,4):
+#             print(tk);
+#             k = tk;
+#             mae,_=encoder_run(20);
+#             avg_tmp[i]+=mae;
+#             i+=1;
+#     avg_tmp/=12;
+#     print(avg_tmp);
+
+    cf_w=0.0;
+    avg_tmp = np.zeros((30));
+    for ca in range(1,13):
         i=0;
-        for tk in range(0,101,10):
-            tk=tk/100.0;
+        case=ca;
+        for tk in range(165,370,10):
             print(tk);
-            cf_w = tk;
+            sk = tk;
             mae,_=encoder_run(5);
             avg_tmp[i]+=mae;
             i+=1;
-    avg_tmp/=5;
+    avg_tmp/=12;
     print(avg_tmp);
-#     for tk in range(3,130,4):
-#         print(tk);
-#         k = tk;
-#         encoder_run(2.5);
-
-#     for tk in range(5,206,10):
-#         print(tk);
-#         sk = tk;
-#         encoder_run(10);
 #         
     pass
