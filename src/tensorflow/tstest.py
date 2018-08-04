@@ -6,8 +6,9 @@ Created on 2018年2月6日
 '''
 
 import tensorflow as tf;
+
 def run():
-    print(dir(tf));
+    print();
     pass;
 
 

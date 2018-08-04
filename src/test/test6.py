@@ -53,5 +53,12 @@ print(np.count_nonzero(ori_contain_all));
 delta = np.subtract(b[0],b[2],out=np.zeros_like(b[0]),where=tag_contain_all&ori_contain_all);
 
 print(delta)
+
+
+
+print(np.spacing(1));
+
+
+
 if __name__ == '__main__':
     pass
