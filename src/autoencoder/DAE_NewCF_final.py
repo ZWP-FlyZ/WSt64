@@ -28,8 +28,6 @@ from tools.LoadLocation import loadLocation
 from mf.MFS import MF_bl;
 
 
-
-
 def actfunc1(x):
     return 1.0/( 1.0 + np.exp(np.array(-x,np.float64)))
 def deactfunc1(x):
@@ -125,10 +123,10 @@ isUserAutoEncoder=True;
 isICF=False;
 
 # 加载AutoEncoder
-loadvalues= True;
-continue_train = False;
+loadvalues= False;
+continue_train = True;
 # 加载相似度矩阵
-readWcache=True;
+readWcache=False;
 
 # 训练例子
 case = 1;

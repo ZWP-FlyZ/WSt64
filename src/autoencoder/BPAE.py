@@ -303,11 +303,13 @@ class DenoiseAutoEncoder:
         print('-->训练开始，learn_param=',self.lp,'repeat=%d \n'%(repeat));
         now = time.time();
         shape1=X.shape[0];
+        dataidx = np.arange(shape1,dtype=np.int);
+        
         for rep in range(repeat):
             tnow=time.time();
             maeAll=0.0;rmseAll=0.0;
-
-            for i in range(shape1):
+            np.random.shuffle(dataidx);
+            for i in dataidx:
 #                 start = i * self.batch;
 #                 end = min(start+self.batch,shape2)
 #                 x = X[start:end,:];
