@@ -558,7 +558,7 @@ class MF_bl_loc:
             tnow=time.time();
             maeAll=0.0;rmseAll=0.0;
             for u,i,rt in train_set:
-                pt = self.value_optimize(u, i, rt, learn_rate,lamda);
+                pt = self.value_optimize(int(u), int(i), rt, learn_rate,lamda);
                 maeAll+=abs(rt-pt);
             maeAll = maeAll / cot;         
             if save_path != None:

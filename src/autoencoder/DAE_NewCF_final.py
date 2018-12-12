@@ -176,7 +176,7 @@ cut_rate = 0.2;
 w_d=50;
 sw_d=100;
 # 测试列表
-test_spa=[20];
+test_spa=[5];
 # 地理位置表
 loc_tab=None;
 
@@ -438,8 +438,8 @@ if __name__ == '__main__':
     
     
     
-#     for spa in test_spa:
-#         encoder_run(spa);
+    for spa in test_spa:
+        encoder_run(spa);
 
 
 #     for spa in test_spa:
@@ -477,18 +477,18 @@ if __name__ == '__main__':
 #     avg_tmp/=12;
 #     print(avg_tmp);
 
-    cf_w=0.0;
-    avg_tmp = np.zeros((30));
-    for ca in range(1,13):
-        i=0;
-        case=ca;
-        for tk in range(165,370,10):
-            print(tk);
-            sk = tk;
-            mae,_=encoder_run(5);
-            avg_tmp[i]+=mae;
-            i+=1;
-    avg_tmp/=12;
-    print(avg_tmp);
+#     cf_w=0.0;
+#     avg_tmp = np.zeros((30));
+#     for ca in range(1,13):
+#         i=0;
+#         case=ca;
+#         for tk in range(165,370,10):
+#             print(tk);
+#             sk = tk;
+#             mae,_=encoder_run(5);
+#             avg_tmp[i]+=mae;
+#             i+=1;
+#     avg_tmp/=12;
+#     print(avg_tmp);
 #         
     pass

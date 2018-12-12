@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 '''
-Created on 2018年4月27日
+Created on 2018年10月16日
 
-@author: zwp
+@author: zwp12
 '''
 
 import numpy as np;
 import time;
-import math;
-import os;
 from tools import SysCheck
 import matplotlib.pyplot as plt 
 from autoencoder import Preprocess;
+from analytics.apriori_frequentitem import apriori;
+
+
 
 def preprocess(R):
     if R is None:
@@ -30,7 +31,7 @@ origin_data = base_path+'/Dataset/ws/rtmatrix.txt';
 
 us_shape=(339,5825);
 # 是否基于用户的自编码器，预测每个用户的所有服务值
-isUserAutoEncoder=True;
+isUserAutoEncoder=False;
 # 是否基于服务的CF方法
 isICF=False;
 
@@ -47,32 +48,21 @@ if isICF:
     axis0 = us_shape[1];
     axis1 = us_shape[0];
 
-mean = 0.908570086101;
-ek = 1.9325920405;
+
 # 训练例子
 case = 1;
 NoneValue = 0.0;
 
-# autoencoder 参数
-hidden_node = 150;
-learn_rate=0.09;
-learn_param = [learn_rate,100,0.99];
-repeat = 500;
-rou=0.1
 
-# 协同过滤参数
-k = 20;
-loc_w= 1.0;
 
-test_spa=10;
+test_spa=[5];
 # 相似列表，shape=(axis0,k),从大到小
 S = None;
 R = None;
 
 loc_tab=None;
 
-# 相识度矩阵
-W = np.full((axis0,axis0), 0, float);
+
     
 fid = 1;
 def setFigure(X,Y,fid):
@@ -109,7 +99,9 @@ def encoder_run(spa):
 #     del trdata,u,s;
 #     print ('转换数据到矩阵结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
     
+    
     R = np.loadtxt(origin_data, dtype=float);
+    
     print ('预处理数据开始');
     tnow = time.time();
     Preprocess.removeNoneValue(R);
@@ -123,24 +115,29 @@ def encoder_run(spa):
     else:
         x_list = np.arange(us_shape[0]);
         sum_list = np.sum(R,axis=1);
-
+    
+    
+        
     print(np.median(sum_list),np.mean(sum_list),np.std(sum_list))
-
-    zeros = np.array(np.where(sum_list==0)[0]);
-    one = np.array(np.where(sum_list==1)[0]);
-    np.savetxt(values_path+'/zero_ind.txt',zeros,'%d');
-    np.savetxt(values_path+'/one_ind.txt',one,'%d');     
-    print(len(zeros));
-    print(len(one));
-    print(len(np.where(sum_list==2)[0]));
-    print(len(np.where(sum_list==3)[0]));
-    print(len(np.where(sum_list==4)[0]));
+    
+    
+    dataset =[];
+    if not isUserAutoEncoder:
+        R = R.T;
+    for i in range(len(R)):
+        idx = np.where(R[i]>0)[0];
+        dataset.append(idx.tolist())
+#     print(dataset);
+    
+    L,sup = apriori(dataset,0.02);
+    print(L[::-1]);
+    print(sup)
+    
     setFigure(x_list, sum_list, spa);
 
 
 
 if __name__ == '__main__':
-    spas = [20];
-    for spa in spas:
-        encoder_run(spa);
+    for spa in test_spa:
+        encoder_run(10);
     pass

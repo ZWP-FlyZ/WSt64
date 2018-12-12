@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 '''
-Created on 2018年4月27日
+Created on 2018年10月16日
 
-@author: zwp
+@author: zwp12
 '''
 
 import numpy as np;
@@ -30,7 +30,7 @@ origin_data = base_path+'/Dataset/ws/rtmatrix.txt';
 
 us_shape=(339,5825);
 # 是否基于用户的自编码器，预测每个用户的所有服务值
-isUserAutoEncoder=True;
+isUserAutoEncoder=False;
 # 是否基于服务的CF方法
 isICF=False;
 
@@ -114,15 +114,14 @@ def encoder_run(spa):
     tnow = time.time();
     Preprocess.removeNoneValue(R);
     Preprocess.preprocess(R);
-    R=preprocess(R);
     print ('预处理数据结束，耗时 %.2f秒  \n'%((time.time() - tnow)));
 
     if isUserAutoEncoder:
         x_list = np.arange(us_shape[1]);
-        sum_list = np.sum(R,axis=0);
+        sum_list = np.mean(R,axis=0);
     else:
         x_list = np.arange(us_shape[0]);
-        sum_list = np.sum(R,axis=1);
+        sum_list = np.mean(R,axis=1);
 
     print(np.median(sum_list),np.mean(sum_list),np.std(sum_list))
 

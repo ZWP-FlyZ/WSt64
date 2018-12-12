@@ -68,7 +68,7 @@ def run():
     data=[];
     names=[];
     area=[];
-    k=4;
+    k=3;
     for sn in ser_loc_m:
         data.append(ser_loc_m[sn][1]);
         names.append(sn);
